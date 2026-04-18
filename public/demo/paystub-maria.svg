@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 520" font-family="'Courier New', Courier, monospace" font-size="12">
+  <rect width="680" height="520" fill="#ffffff"/>
+  <rect x="0" y="0" width="680" height="60" fill="#1a3a5c"/>
+  <text x="24" y="28" fill="#ffffff" font-size="18" font-weight="bold">ROSITA'S KITCHEN</text>
+  <text x="24" y="46" fill="#b0c4de" font-size="11">4821 S Congress Ave, Austin, TX 78745 | (512) 555-0147 | EIN: 74-3291056</text>
+  <text x="560" y="28" fill="#ffffff" font-size="11" text-anchor="end">EARNINGS STATEMENT</text>
+  <text x="560" y="46" fill="#b0c4de" font-size="10" text-anchor="end">Keep for your records</text>
+
+  <text x="24" y="84" fill="#333" font-size="11" font-weight="bold">EMPLOYEE</text>
+  <text x="24" y="100" fill="#333" font-size="11">Maria G. Hernandez</text>
+  <text x="24" y="114" fill="#333" font-size="11">SSN: XXX-XX-4829</text>
+  <text x="24" y="128" fill="#333" font-size="11">Emp #: 10247</text>
+
+  <text x="350" y="84" fill="#333" font-size="11" font-weight="bold">PAY PERIOD</text>
+  <text x="350" y="100" fill="#333" font-size="11">Start: 04/07/2026</text>
+  <text x="350" y="114" fill="#333" font-size="11">End:   04/12/2026</text>
+  <text x="350" y="128" fill="#333" font-size="11">Pay Date: 04/15/2026</text>
+  <text x="530" y="100" fill="#333" font-size="11">Check #: 058219</text>
+  <text x="530" y="114" fill="#333" font-size="11">Dept: Kitchen</text>
+
+  <line x1="20" y1="142" x2="660" y2="142" stroke="#999" stroke-width="0.5"/>
+
+  <rect x="20" y="150" width="640" height="22" fill="#e8edf2"/>
+  <text x="28" y="165" fill="#1a3a5c" font-size="11" font-weight="bold">EARNINGS</text>
+  <text x="260" y="165" fill="#1a3a5c" font-size="11" font-weight="bold" text-anchor="end">RATE</text>
+  <text x="360" y="165" fill="#1a3a5c" font-size="11" font-weight="bold" text-anchor="end">HOURS</text>
+  <text x="460" y="165" fill="#1a3a5c" font-size="11" font-weight="bold" text-anchor="end">CURRENT</text>
+  <text x="570" y="165" fill="#1a3a5c" font-size="11" font-weight="bold" text-anchor="end">YTD</text>
+
+  <text x="28" y="190" fill="#333" font-size="11">Regular</text>
+  <text x="260" y="190" fill="#333" font-size="11" text-anchor="end">15.00</text>
+  <text x="360" y="190" fill="#333" font-size="11" text-anchor="end">40.00</text>
+  <text x="460" y="190" fill="#333" font-size="11" text-anchor="end">600.00</text>
+  <text x="570" y="190" fill="#333" font-size="11" text-anchor="end">8,400.00</text>
+
+  <text x="28" y="208" fill="#999" font-size="11">Overtime</text>
+  <text x="260" y="208" fill="#999" font-size="11" text-anchor="end">0.00</text>
+  <text x="360" y="208" fill="#999" font-size="11" text-anchor="end">0.00</text>
+  <text x="460" y="208" fill="#999" font-size="11" text-anchor="end">0.00</text>
+  <text x="570" y="208" fill="#999" font-size="11" text-anchor="end">0.00</text>
+
+  <line x1="380" y1="216" x2="580" y2="216" stroke="#999" stroke-width="0.5"/>
+  <text x="28" y="232" fill="#333" font-size="11" font-weight="bold">GROSS PAY</text>
+  <text x="460" y="232" fill="#333" font-size="11" font-weight="bold" text-anchor="end">$600.00</text>
+  <text x="570" y="232" fill="#333" font-size="11" font-weight="bold" text-anchor="end">$8,400.00</text>
+
+  <line x1="20" y1="246" x2="660" y2="246" stroke="#999" stroke-width="0.5"/>
+
+  <rect x="20" y="254" width="640" height="22" fill="#e8edf2"/>
+  <text x="28" y="269" fill="#1a3a5c" font-size="11" font-weight="bold">DEDUCTIONS</text>
+  <text x="460" y="269" fill="#1a3a5c" font-size="11" font-weight="bold" text-anchor="end">CURRENT</text>
+  <text x="570" y="269" fill="#1a3a5c" font-size="11" font-weight="bold" text-anchor="end">YTD</text>
+
+  <text x="28" y="294" fill="#333" font-size="11">Federal Income Tax</text>
+  <text x="460" y="294" fill="#333" font-size="11" text-anchor="end">48.00</text>
+  <text x="570" y="294" fill="#333" font-size="11" text-anchor="end">672.00</text>
+
+  <text x="28" y="312" fill="#333" font-size="11">Social Security (6.2%)</text>
+  <text x="460" y="312" fill="#333" font-size="11" text-anchor="end">37.20</text>
+  <text x="570" y="312" fill="#333" font-size="11" text-anchor="end">520.80</text>
+
+  <text x="28" y="330" fill="#333" font-size="11">Medicare (1.45%)</text>
+  <text x="460" y="330" fill="#333" font-size="11" text-anchor="end">8.70</text>
+  <text x="570" y="330" fill="#333" font-size="11" text-anchor="end">121.80</text>
+
+  <line x1="380" y1="340" x2="580" y2="340" stroke="#999" stroke-width="0.5"/>
+  <text x="28" y="356" fill="#333" font-size="11" font-weight="bold">TOTAL DEDUCTIONS</text>
+  <text x="460" y="356" fill="#333" font-size="11" font-weight="bold" text-anchor="end">$93.90</text>
+  <text x="570" y="356" fill="#333" font-size="11" font-weight="bold" text-anchor="end">$1,314.60</text>
+
+  <line x1="20" y1="370" x2="660" y2="370" stroke="#999" stroke-width="0.5"/>
+
+  <rect x="20" y="378" width="640" height="36" fill="#f0f5eb"/>
+  <text x="28" y="401" fill="#1a3a5c" font-size="14" font-weight="bold">NET PAY</text>
+  <text x="460" y="401" fill="#1a3a5c" font-size="14" font-weight="bold" text-anchor="end">$506.10</text>
+
+  <line x1="20" y1="424" x2="660" y2="424" stroke="#999" stroke-width="0.5"/>
+
+  <text x="24" y="444" fill="#333" font-size="10">Payment Method: Direct Deposit</text>
+  <text x="24" y="458" fill="#333" font-size="10">Account: ****7832  |  Routing: ****4501</text>
+
+  <text x="24" y="484" fill="#999" font-size="9">This statement is provided for informational purposes. Verify hours and pay with your supervisor.</text>
+  <text x="24" y="498" fill="#999" font-size="9">Rosita's Kitchen LLC  |  Processed by QuickPay Payroll Services</text>
+
+  <rect x="20" y="506" width="640" height="1" fill="#1a3a5c"/>
+</svg>

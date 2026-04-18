@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 520" font-family="'Courier New', Courier, monospace" font-size="12">
+  <rect width="680" height="520" fill="#ffffff"/>
+  <rect x="0" y="0" width="680" height="60" fill="#c45a1c"/>
+  <text x="24" y="28" fill="#ffffff" font-size="18" font-weight="bold">PACIFIC BUILD CO.</text>
+  <text x="24" y="46" fill="#fcd5b8" font-size="11">1900 Figueroa St, Los Angeles, CA 90007 | (213) 555-0388 | EIN: 95-4718203</text>
+  <text x="560" y="28" fill="#ffffff" font-size="11" text-anchor="end">PAY STATEMENT</text>
+  <text x="560" y="46" fill="#fcd5b8" font-size="10" text-anchor="end">Retain for tax purposes</text>
+
+  <text x="24" y="84" fill="#333" font-size="11" font-weight="bold">EMPLOYEE</text>
+  <text x="24" y="100" fill="#333" font-size="11">James T. Robinson</text>
+  <text x="24" y="114" fill="#333" font-size="11">SSN: XXX-XX-6173</text>
+  <text x="24" y="128" fill="#333" font-size="11">Emp #: C-0384</text>
+
+  <text x="350" y="84" fill="#333" font-size="11" font-weight="bold">PAY INFORMATION</text>
+  <text x="350" y="100" fill="#333" font-size="11">Period: 04/07/2026 - 04/11/2026</text>
+  <text x="350" y="114" fill="#333" font-size="11">Pay Date: 04/14/2026</text>
+  <text x="350" y="128" fill="#333" font-size="11">Check #: 012847</text>
+  <text x="530" y="100" fill="#333" font-size="11">Job: Framing</text>
+  <text x="530" y="114" fill="#333" font-size="11">Class: Laborer I</text>
+
+  <line x1="20" y1="142" x2="660" y2="142" stroke="#999" stroke-width="0.5"/>
+
+  <rect x="20" y="150" width="640" height="22" fill="#fdf0e6"/>
+  <text x="28" y="165" fill="#8b3a0f" font-size="11" font-weight="bold">EARNINGS</text>
+  <text x="260" y="165" fill="#8b3a0f" font-size="11" font-weight="bold" text-anchor="end">RATE</text>
+  <text x="360" y="165" fill="#8b3a0f" font-size="11" font-weight="bold" text-anchor="end">HOURS</text>
+  <text x="460" y="165" fill="#8b3a0f" font-size="11" font-weight="bold" text-anchor="end">CURRENT</text>
+  <text x="570" y="165" fill="#8b3a0f" font-size="11" font-weight="bold" text-anchor="end">YTD</text>
+
+  <text x="28" y="190" fill="#333" font-size="11">Regular</text>
+  <text x="260" y="190" fill="#333" font-size="11" text-anchor="end">18.00</text>
+  <text x="360" y="190" fill="#333" font-size="11" text-anchor="end">40.00</text>
+  <text x="460" y="190" fill="#333" font-size="11" text-anchor="end">720.00</text>
+  <text x="570" y="190" fill="#333" font-size="11" text-anchor="end">10,080.00</text>
+
+  <text x="28" y="208" fill="#999" font-size="11">Overtime (1.5x)</text>
+  <text x="260" y="208" fill="#999" font-size="11" text-anchor="end">0.00</text>
+  <text x="360" y="208" fill="#999" font-size="11" text-anchor="end">0.00</text>
+  <text x="460" y="208" fill="#999" font-size="11" text-anchor="end">0.00</text>
+  <text x="570" y="208" fill="#999" font-size="11" text-anchor="end">0.00</text>
+
+  <text x="28" y="226" fill="#999" font-size="11">Double Time (2x)</text>
+  <text x="260" y="226" fill="#999" font-size="11" text-anchor="end">0.00</text>
+  <text x="360" y="226" fill="#999" font-size="11" text-anchor="end">0.00</text>
+  <text x="460" y="226" fill="#999" font-size="11" text-anchor="end">0.00</text>
+  <text x="570" y="226" fill="#999" font-size="11" text-anchor="end">0.00</text>
+
+  <line x1="380" y1="234" x2="580" y2="234" stroke="#999" stroke-width="0.5"/>
+  <text x="28" y="250" fill="#333" font-size="11" font-weight="bold">GROSS PAY</text>
+  <text x="460" y="250" fill="#333" font-size="11" font-weight="bold" text-anchor="end">$720.00</text>
+  <text x="570" y="250" fill="#333" font-size="11" font-weight="bold" text-anchor="end">$10,080.00</text>
+
+  <line x1="20" y1="262" x2="660" y2="262" stroke="#999" stroke-width="0.5"/>
+
+  <rect x="20" y="268" width="640" height="22" fill="#fdf0e6"/>
+  <text x="28" y="283" fill="#8b3a0f" font-size="11" font-weight="bold">DEDUCTIONS</text>
+  <text x="460" y="283" fill="#8b3a0f" font-size="11" font-weight="bold" text-anchor="end">CURRENT</text>
+  <text x="570" y="283" fill="#8b3a0f" font-size="11" font-weight="bold" text-anchor="end">YTD</text>
+
+  <text x="28" y="306" fill="#333" font-size="11">Federal Income Tax</text>
+  <text x="460" y="306" fill="#333" font-size="11" text-anchor="end">72.00</text>
+  <text x="570" y="306" fill="#333" font-size="11" text-anchor="end">1,008.00</text>
+
+  <text x="28" y="324" fill="#333" font-size="11">CA State Income Tax</text>
+  <text x="460" y="324" fill="#333" font-size="11" text-anchor="end">28.80</text>
+  <text x="570" y="324" fill="#333" font-size="11" text-anchor="end">403.20</text>
+
+  <text x="28" y="342" fill="#333" font-size="11">Social Security (6.2%)</text>
+  <text x="460" y="342" fill="#333" font-size="11" text-anchor="end">44.64</text>
+  <text x="570" y="342" fill="#333" font-size="11" text-anchor="end">624.96</text>
+
+  <text x="28" y="360" fill="#333" font-size="11">Medicare (1.45%)</text>
+  <text x="460" y="360" fill="#333" font-size="11" text-anchor="end">10.44</text>
+  <text x="570" y="360" fill="#333" font-size="11" text-anchor="end">146.16</text>
+
+  <line x1="380" y1="370" x2="580" y2="370" stroke="#999" stroke-width="0.5"/>
+  <text x="28" y="386" fill="#333" font-size="11" font-weight="bold">TOTAL DEDUCTIONS</text>
+  <text x="460" y="386" fill="#333" font-size="11" font-weight="bold" text-anchor="end">$155.88</text>
+  <text x="570" y="386" fill="#333" font-size="11" font-weight="bold" text-anchor="end">$2,182.32</text>
+
+  <line x1="20" y1="398" x2="660" y2="398" stroke="#999" stroke-width="0.5"/>
+
+  <rect x="20" y="404" width="640" height="36" fill="#fef7f0"/>
+  <text x="28" y="427" fill="#8b3a0f" font-size="14" font-weight="bold">NET PAY</text>
+  <text x="460" y="427" fill="#8b3a0f" font-size="14" font-weight="bold" text-anchor="end">$564.12</text>
+
+  <line x1="20" y1="450" x2="660" y2="450" stroke="#999" stroke-width="0.5"/>
+
+  <text x="24" y="470" fill="#333" font-size="10">Payment: Live Check  |  Check #012847</text>
+  <text x="24" y="484" fill="#999" font-size="9">Pacific Build Co. Inc.  |  CA Contractor Lic #847291  |  Payroll by ADP Workforce</text>
+  <text x="24" y="498" fill="#999" font-size="9">Questions? Contact payroll@pacificbuild.com or call (213) 555-0388 ext. 204</text>
+
+  <rect x="20" y="508" width="640" height="1" fill="#c45a1c"/>
+</svg>
