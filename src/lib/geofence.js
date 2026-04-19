@@ -33,6 +33,7 @@ import { getAccountSettings } from './accounts'
  */
 
 const NOTIFICATION_DEBOUNCE_MS = 5 * 60 * 1000 // 5 minutes per fence direction
+const WATCHER_PREF_KEY = 'shiftguard_geofence_watcher_enabled'
 
 export function isGeolocationSupported() {
   return typeof navigator !== 'undefined' && !!navigator.geolocation
@@ -40,6 +41,39 @@ export function isGeolocationSupported() {
 
 export function isNotificationSupported() {
   return notificationsSupported()
+}
+
+/**
+ * Cross-browser permission probe via the Permissions API. Returns one of
+ * 'granted' | 'denied' | 'prompt' | 'unsupported'. Safari has historically
+ * lacked permissions.query for geolocation, so we fall back to 'prompt' there.
+ */
+export async function queryGeolocationPermission() {
+  if (!isGeolocationSupported()) return 'unsupported'
+  if (typeof navigator.permissions?.query !== 'function') return 'prompt'
+  try {
+    const res = await navigator.permissions.query({ name: 'geolocation' })
+    return res.state || 'prompt'
+  } catch {
+    return 'prompt'
+  }
+}
+
+export function isWatcherPreferenceEnabled() {
+  try {
+    return localStorage.getItem(WATCHER_PREF_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function setWatcherPreference(on) {
+  try {
+    if (on) localStorage.setItem(WATCHER_PREF_KEY, '1')
+    else localStorage.removeItem(WATCHER_PREF_KEY)
+  } catch {
+    /* noop */
+  }
 }
 
 export async function requestGeolocationPermission() {
@@ -322,5 +356,30 @@ function fireReminder({ fence, direction, summary, enterIso, leaveIso }) {
       autoShiftId: autoShift?.id || null,
       ...(summary || {}),
     },
+  })
+}
+
+/**
+ * Fire a test enter+leave pair for a single fence without touching geolocation.
+ * Useful for the "Test this fence" button so users can confirm their
+ * notification and auto-log wiring without walking to the worksite.
+ *
+ * Simulates an enter 65 minutes ago and a leave now, so the fake shift summary
+ * looks like a real hour-plus shift.
+ */
+export function simulateFenceVisit(fence) {
+  if (!fence) return
+  const now = Date.now()
+  const enterIso = new Date(now - 65 * 60_000).toISOString()
+  const leaveIso = new Date(now).toISOString()
+  const summary = summarizeShift({ enterIso, leaveIso })
+  // Fire the leave event directly (enter is implicit in the summary window).
+  fireReminder({
+    fence,
+    direction: 'leave',
+    summary,
+    enterIso,
+    leaveIso,
+    distance: 0,
   })
 }

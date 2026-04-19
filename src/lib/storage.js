@@ -1,10 +1,22 @@
 import { normalizeAnalysis } from './analysisUtils'
 import { getActiveScope } from './accounts'
+import {
+  readSync as secureReadSync,
+  writeSync as secureWriteSync,
+  removeSync as secureRemoveSync,
+  isSensitiveScoped,
+} from './secureStore'
 
 /**
  * Storage keys are namespaced per-account so signing in/out swaps the entire ShiftGuard
  * data set transparently. The key constants below are stable identifiers; the active
  * scope prefix from `accounts.js` is prepended at read/write time.
+ *
+ * Anything that lands in SENSITIVE_KEYS (see secureStore) routes through the
+ * AES-GCM-backed cache instead of directly touching localStorage. Non-sensitive
+ * keys (preferences, onboarding flags, UI state, geofences, anomalies metadata,
+ * etc.) continue to read/write plaintext JSON for boot-time simplicity and to
+ * keep the UI responsive before the vault is unlocked.
  */
 function scoped(key) {
   return `${getActiveScope()}${key}`
@@ -94,8 +106,13 @@ function notifyDataChanged() {
 }
 
 function read(key) {
+  const full = scoped(key)
+  if (isSensitiveScoped(full)) {
+    const v = secureReadSync(full)
+    return v == null ? null : v
+  }
   try {
-    const raw = localStorage.getItem(scoped(key))
+    const raw = localStorage.getItem(full)
     return raw ? JSON.parse(raw) : null
   } catch {
     return null
@@ -103,8 +120,14 @@ function read(key) {
 }
 
 function write(key, data) {
+  const full = scoped(key)
+  if (isSensitiveScoped(full)) {
+    secureWriteSync(full, data)
+    notifyDataChanged()
+    return
+  }
   try {
-    localStorage.setItem(scoped(key), JSON.stringify(data))
+    localStorage.setItem(full, JSON.stringify(data))
     notifyDataChanged()
   } catch (err) {
     console.error('[ShiftGuard] Storage write failed (private mode, quota, or blocked).', err)
@@ -112,7 +135,13 @@ function write(key, data) {
 }
 
 function remove(key) {
-  localStorage.removeItem(scoped(key))
+  const full = scoped(key)
+  if (isSensitiveScoped(full)) {
+    secureRemoveSync(full)
+    notifyDataChanged()
+    return
+  }
+  localStorage.removeItem(full)
   notifyDataChanged()
 }
 
@@ -490,7 +519,12 @@ export function getWorkflowProgress() {
 
 export function clearAll() {
   for (const key of Object.values(KEYS)) {
-    localStorage.removeItem(scoped(key))
+    const full = scoped(key)
+    if (isSensitiveScoped(full)) {
+      secureRemoveSync(full)
+    } else {
+      try { localStorage.removeItem(full) } catch { /* noop */ }
+    }
   }
   notifyDataChanged()
 }

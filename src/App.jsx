@@ -12,6 +12,7 @@ import HistoryScreen from './screens/History'
 import Pricing from './screens/Pricing'
 import Integrations from './screens/Integrations'
 import Geofence from './screens/Geofence'
+import Security from './screens/Security'
 import Auth from './screens/Auth'
 
 const Dashboard = lazy(() => import('./screens/Dashboard'))
@@ -40,6 +41,7 @@ export default function App() {
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/integrations" element={<Integrations />} />
       <Route path="/geofence" element={<Geofence />} />
+      <Route path="/security" element={<Security />} />
       <Route path="/auth" element={<Auth />} />
       {/* Legacy routes (preserved as redirects so old links keep working) */}
       <Route path="/start" element={<Navigate to="/upload" replace />} />

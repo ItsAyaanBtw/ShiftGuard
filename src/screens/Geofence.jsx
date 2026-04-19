@@ -2,7 +2,7 @@ import { useEffect, useReducer, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   MapPin, Crosshair, Bell, BellOff, Trash2, CheckCircle2, AlertCircle, Loader2,
-  ArrowRight,
+  ArrowRight, Play,
 } from 'lucide-react'
 import Header from '../components/Header'
 import Disclaimer from '../components/Disclaimer'
@@ -12,6 +12,8 @@ import {
 import {
   isGeolocationSupported, isNotificationSupported,
   requestGeolocationPermission, getCurrentPosition, startGeofenceWatcher,
+  distanceMeters, simulateFenceVisit,
+  queryGeolocationPermission, isWatcherPreferenceEnabled, setWatcherPreference,
 } from '../lib/geofence'
 import {
   getPermission as getNotificationPermission, requestPermission as requestNotifPermission,
@@ -39,7 +41,9 @@ export default function GeofenceScreen() {
   const [posBusy, setPosBusy] = useState(false)
   const [err, setErr] = useState('')
   const [info, setInfo] = useState('')
-  const [watcherOn, setWatcherOn] = useState(false)
+  const [watcherOn, setWatcherOn] = useState(() => isWatcherPreferenceEnabled())
+  const [lastSample, setLastSample] = useState(null)
+  const [geoPermission, setGeoPermission] = useState('prompt')
 
   useEffect(() => {
     const on = () => bump()
@@ -47,9 +51,27 @@ export default function GeofenceScreen() {
     return () => window.removeEventListener('shiftguard-data-changed', on)
   }, [])
 
+  // Auto-refresh the OS-level geolocation permission state, so if the user
+  // grants / denies in another tab or in settings we reflect it here.
   useEffect(() => {
+    let cancelled = false
+    async function check() {
+      const state = await queryGeolocationPermission()
+      if (!cancelled) setGeoPermission(state)
+    }
+    check()
+    const t = setInterval(check, 10_000)
+    return () => { cancelled = true; clearInterval(t) }
+  }, [])
+
+  // Run the watcher whenever the user toggled it on AND there's at least one
+  // fence AND geolocation is supported. Persist the toggle so a reload keeps
+  // the same runtime state.
+  useEffect(() => {
+    setWatcherPreference(watcherOn)
     if (!watcherOn) return
     const stop = startGeofenceWatcher({
+      onChange: (sample) => setLastSample(sample),
       onEvent: (e) => setInfo(`${e.direction === 'enter' ? 'Entered' : 'Left'} ${e.fence.label}.`),
     })
     return stop
@@ -267,9 +289,16 @@ export default function GeofenceScreen() {
 
             <div className="mt-4 space-y-2 text-xs">
               <Row label="Account" value={isLoggedIn() ? getActiveAccount()?.displayName || 'signed in' : 'guest'} ok={isLoggedIn()} />
-              <Row label="Geolocation" value={geoSupported ? 'Supported' : 'Unavailable'} ok={geoSupported} />
+              <Row label="Geolocation" value={geoSupported ? `Supported (${geoPermission})` : 'Unavailable'} ok={geoSupported && geoPermission !== 'denied'} />
               <Row label="Notifications" value={notifPermission} ok={notifPermission === 'granted'} />
               <Row label="Fences configured" value={fences.length} ok={fences.length > 0} />
+              {watcherOn && lastSample && (
+                <Row
+                  label="Last reading"
+                  value={`${lastSample.lat.toFixed(4)}, ${lastSample.lng.toFixed(4)} (±${Math.round(lastSample.accuracy || 0)}m)`}
+                  ok
+                />
+              )}
             </div>
 
             <NotificationToggles />
@@ -307,30 +336,55 @@ export default function GeofenceScreen() {
             </div>
           ) : (
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {fences.map(f => (
-                <li key={f.id} className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 flex items-start gap-3">
-                  <MapPin className="w-4 h-4 text-terracotta mt-0.5 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white font-medium truncate">{f.label}</p>
-                    <p className="text-[11px] text-slate-400 font-mono">
-                      {f.lat.toFixed(5)}, {f.lng.toFixed(5)} · r={f.radiusM}m
-                    </p>
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      {f.remindOnEnter ? 'Ping on enter' : 'No enter ping'} · {f.remindOnLeave ? 'Ping on leave' : 'No leave ping'}
-                      {f.linkedEmployer ? ` · ${f.linkedEmployer}` : ''}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeGeofence(f.id)}
-                    className="shrink-0 inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-red-300"
-                    aria-label="Delete fence"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    Delete
-                  </button>
-                </li>
-              ))}
+              {fences.map(f => {
+                const dist = lastSample ? distanceMeters(lastSample, f) : null
+                const inside = dist != null && dist <= (f.radiusM || 200)
+                return (
+                  <li key={f.id} className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 flex items-start gap-3">
+                    <MapPin className={`w-4 h-4 mt-0.5 shrink-0 ${inside ? 'text-green-400' : 'text-terracotta'}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm text-white font-medium truncate">{f.label}</p>
+                        {dist != null && (
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                            inside
+                              ? 'text-green-300 border-green-500/30 bg-green-500/10'
+                              : 'text-slate-300 border-slate-700 bg-slate-950/50'
+                          }`}>
+                            {inside ? 'Inside' : `${Math.round(dist)} m away`}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-mono">
+                        {f.lat.toFixed(5)}, {f.lng.toFixed(5)} · r={f.radiusM}m
+                      </p>
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        {f.remindOnEnter ? 'Ping on enter' : 'No enter ping'} · {f.remindOnLeave ? 'Ping on leave' : 'No leave ping'}
+                        {f.linkedEmployer ? ` · ${f.linkedEmployer}` : ''}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => { simulateFenceVisit(f); setInfo(`Sent test reminder for ${f.label}.`) }}
+                          className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded border border-slate-700 bg-slate-950/50 text-slate-200 hover:border-terracotta/40 hover:text-terracotta"
+                        >
+                          <Play className="w-3 h-3" />
+                          Test this fence
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeGeofence(f.id)}
+                          className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded border border-slate-700 bg-slate-950/50 text-slate-400 hover:text-red-300 hover:border-red-500/40"
+                          aria-label="Delete fence"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
             </ul>
           )}
         </section>

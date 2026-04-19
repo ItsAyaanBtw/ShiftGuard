@@ -17,6 +17,19 @@
  * scoped storage (e.g. notification opt-ins that should survive logout/login).
  */
 
+import {
+  deriveRawKeyFromPassword,
+  setSessionRawKey,
+  getSessionRawKey,
+  clearSessionRawKey,
+  getOrCreateGuestDeviceKey,
+} from './cryptoBox'
+import {
+  bootstrap as secureBootstrap,
+  migrateLegacyPlaintext,
+  lock as secureLock,
+} from './secureStore'
+
 const ACCOUNTS_KEY = 'shiftguard_accounts_v1'
 const ACTIVE_KEY = 'shiftguard_active_account_id'
 const GUEST_ID = 'guest'
@@ -109,13 +122,32 @@ export function getActiveScope() {
   return `${SCOPE_PREFIX}${getActiveAccountId()}_`
 }
 
-export function setActiveAccount(id) {
+/**
+ * Switch the active account pointer. Pass `{ skipUnlock: true }` from sign-in
+ * and sign-up flows (they handle the bootstrap themselves); otherwise the
+ * pointer change also tears down the secure cache so a subsequent
+ * rehydrateSecureStore() boots cleanly.
+ */
+export function setActiveAccount(id, { skipUnlock = false } = {}) {
   localStorage.setItem(ACTIVE_KEY, id || GUEST_ID)
+  if (!skipUnlock) {
+    secureLock()
+    clearSessionRawKey()
+  }
   notifyAccountChanged()
 }
 
 export function logout() {
-  setActiveAccount(GUEST_ID)
+  secureLock()
+  clearSessionRawKey()
+  localStorage.setItem(ACTIVE_KEY, GUEST_ID)
+  notifyAccountChanged()
+  // Immediately re-bootstrap as guest so the app isn't stuck in a locked
+  // state. Guest has a device key on disk so this is synchronous in effect.
+  const rawKey = getOrCreateGuestDeviceKey()
+  setSessionRawKey(rawKey)
+  const scope = `${SCOPE_PREFIX}${GUEST_ID}_`
+  secureBootstrap(scope, rawKey).then(() => notifyAccountChanged())
 }
 
 /* -------------------------------------------------------------------------- */
@@ -127,8 +159,8 @@ export async function signUp({ email, password, displayName }) {
   if (!cleanEmail || !cleanEmail.includes('@')) {
     throw new Error('Enter a valid email address.')
   }
-  if (!password || password.length < 6) {
-    throw new Error('Password must be at least 6 characters.')
+  if (!password || password.length < 8) {
+    throw new Error('Password must be at least 8 characters.')
   }
   const index = readIndex()
   if (index.some(a => a.email === cleanEmail)) {
@@ -136,6 +168,7 @@ export async function signUp({ email, password, displayName }) {
   }
   const salt = randomBytes()
   const hash = await hashPassword(password, salt)
+  const dataSalt = randomBytes(32) // distinct salt for the AES-GCM key derivation
   const id = `acct_${Date.now()}_${randomBytes(4)}`
   const account = {
     id,
@@ -143,12 +176,25 @@ export async function signUp({ email, password, displayName }) {
     displayName: String(displayName || cleanEmail.split('@')[0] || 'New user').trim(),
     salt,
     hash,
+    dataSalt,
+    keyVersion: 1,
     createdAt: new Date().toISOString(),
     lastLoginAt: new Date().toISOString(),
     settings: { notifications: { geofence: true, dailySummary: true }, autoTrackShifts: true },
   }
   writeIndex([...index, account])
-  setActiveAccount(id)
+  setActiveAccount(id, { skipUnlock: true })
+
+  // Derive + cache the data key, bootstrap the secure store against the new
+  // (empty) scope. This gives the new account an encrypted store from the
+  // first write onward.
+  const rawKey = await deriveRawKeyFromPassword(password, dataSalt)
+  setSessionRawKey(rawKey)
+  const scope = `${SCOPE_PREFIX}${id}_`
+  await secureBootstrap(scope, rawKey)
+  await migrateLegacyPlaintext()
+
+  notifyAccountChanged()
   return getActiveAccount()
 }
 
@@ -159,20 +205,100 @@ export async function signIn({ email, password }) {
   if (!acct) throw new Error('No account found for that email on this device.')
   const computed = await hashPassword(password, acct.salt)
   if (computed !== acct.hash) throw new Error('That password does not match.')
-  const updated = { ...acct, lastLoginAt: new Date().toISOString() }
+
+  // Backfill dataSalt for accounts created before the crypto rollout. Legacy
+  // plaintext blobs get rewrapped into AES-GCM on the first write after
+  // bootstrap via migrateLegacyPlaintext().
+  let dataSalt = acct.dataSalt
+  if (!dataSalt) {
+    dataSalt = randomBytes(32)
+  }
+  const updated = {
+    ...acct,
+    dataSalt,
+    keyVersion: acct.keyVersion || 1,
+    lastLoginAt: new Date().toISOString(),
+  }
   writeIndex(index.map(a => (a.id === acct.id ? updated : a)))
-  setActiveAccount(acct.id)
+  setActiveAccount(acct.id, { skipUnlock: true })
+
+  const rawKey = await deriveRawKeyFromPassword(password, dataSalt)
+  setSessionRawKey(rawKey)
+  const scope = `${SCOPE_PREFIX}${acct.id}_`
+  const result = await secureBootstrap(scope, rawKey)
+  if (!result.ok) {
+    // Wrong key / corrupt ciphertext. Keep the session key so the app can show
+    // a clear locked-state UI instead of failing silently.
+    throw new Error('Your password unlocks the account but the encrypted data on this device could not be decrypted. If you recently changed devices or wiped data, sign out and sign back in to re-seed the vault.')
+  }
+  await migrateLegacyPlaintext()
+
+  notifyAccountChanged()
   return getActiveAccount()
 }
 
 export function continueAsGuest() {
-  setActiveAccount(GUEST_ID)
+  setActiveAccount(GUEST_ID, { skipUnlock: true })
+  // Load (or seed) the device-local guest key and unlock immediately.
+  const rawKey = getOrCreateGuestDeviceKey()
+  setSessionRawKey(rawKey)
+  const scope = `${SCOPE_PREFIX}${GUEST_ID}_`
+  secureBootstrap(scope, rawKey).then(async (res) => {
+    if (res.ok) {
+      await migrateLegacyPlaintext()
+      notifyAccountChanged()
+    }
+  })
 }
 
 export function deleteAccount(id) {
   const index = readIndex().filter(a => a.id !== id)
   writeIndex(index)
-  if (getActiveAccountId() === id) setActiveAccount(GUEST_ID)
+  if (getActiveAccountId() === id) {
+    secureLock()
+    clearSessionRawKey()
+    setActiveAccount(GUEST_ID)
+  }
+}
+
+/**
+ * Re-bootstrap the secure store from the session-stored raw key. Called at app
+ * startup after a page reload: sessionStorage survives F5 so the user stays
+ * unlocked without re-typing their password. Returns:
+ *
+ *   { state: 'unlocked' }                  — all good, cache is populated
+ *   { state: 'guest-unlocked' }            — guest was auto-unlocked with the device key
+ *   { state: 'locked', reason: '...' }     — no session key; UI should surface sign-in
+ *
+ * Never throws. The app always renders.
+ */
+export async function rehydrateSecureStore() {
+  const id = getActiveAccountId()
+  const scope = `${SCOPE_PREFIX}${id}_`
+
+  if (id === GUEST_ID) {
+    const rawKey = getOrCreateGuestDeviceKey()
+    setSessionRawKey(rawKey)
+    const res = await secureBootstrap(scope, rawKey)
+    if (res.ok) await migrateLegacyPlaintext()
+    return { state: 'guest-unlocked', ok: res.ok }
+  }
+
+  const session = getSessionRawKey()
+  if (session && session.length >= 32) {
+    const res = await secureBootstrap(scope, session)
+    if (res.ok) {
+      await migrateLegacyPlaintext()
+      return { state: 'unlocked' }
+    }
+    // Key did not decrypt — the account was probably signed out in another
+    // tab. Force-lock so the UI prompts for sign-in.
+    clearSessionRawKey()
+    secureLock()
+    return { state: 'locked', reason: 'session-key-invalid' }
+  }
+  secureLock()
+  return { state: 'locked', reason: 'no-session-key' }
 }
 
 /* -------------------------------------------------------------------------- */

@@ -2,12 +2,13 @@ import { createElement, useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Clock, Camera, GitCompareArrows, FileText, BarChart3, CircleDollarSign,
-  ShieldCheck, Wrench, Plug, LogIn, LogOut, User, Menu, X,
+  ShieldCheck, Wrench, Plug, LogIn, LogOut, User, Menu, X, Lock, Unlock,
 } from 'lucide-react'
 import WorkflowProgress from './WorkflowProgress'
 import ScrollProgress from './motion/ScrollProgress'
 import BrandMark, { Wordmark } from './BrandMark'
 import { getActiveAccount, isLoggedIn, logout } from '../lib/accounts'
+import { isUnlocked } from '../lib/secureStore'
 
 /**
  * Desktop shows the core workflow plus Tools / Dashboard / Pricing.
@@ -41,6 +42,7 @@ export default function Header() {
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [account, setAccount] = useState(() => getActiveAccount())
+  const [unlocked, setUnlocked] = useState(() => isUnlocked())
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setMobileOpen(false))
@@ -49,8 +51,15 @@ export default function Header() {
 
   useEffect(() => {
     const refresh = () => setAccount(getActiveAccount())
+    const unlockRefresh = () => setUnlocked(isUnlocked())
     window.addEventListener('shiftguard-account-changed', refresh)
-    return () => window.removeEventListener('shiftguard-account-changed', refresh)
+    window.addEventListener('shiftguard-secure-unlocked', unlockRefresh)
+    window.addEventListener('shiftguard-data-changed', unlockRefresh)
+    return () => {
+      window.removeEventListener('shiftguard-account-changed', refresh)
+      window.removeEventListener('shiftguard-secure-unlocked', unlockRefresh)
+      window.removeEventListener('shiftguard-data-changed', unlockRefresh)
+    }
   }, [])
 
   const loggedIn = isLoggedIn()
@@ -122,6 +131,23 @@ export default function Header() {
             </span>
             {loggedIn && <LogOut className="w-3 h-3 text-slate-500 ml-0.5" />}
           </button>
+
+          {/* Vault lock indicator. Green unlock = cache decrypted; amber lock = locked. */}
+          <Link
+            to="/security"
+            className={`hidden lg:inline-flex items-center gap-1.5 shrink-0 text-[11px] font-medium px-2 py-1.5 rounded-lg border ${
+              unlocked
+                ? 'text-green-300 border-green-500/30 bg-green-500/5 hover:border-green-500/50'
+                : 'text-amber-200 border-amber-500/30 bg-amber-500/10 hover:border-amber-500/50'
+            }`}
+            title={unlocked ? 'Your vault is unlocked on this device. Click for details.' : 'Your vault is locked. Click for details.'}
+            aria-label={unlocked ? 'Vault unlocked' : 'Vault locked'}
+          >
+            {unlocked
+              ? <Unlock className="w-3.5 h-3.5" />
+              : <Lock className="w-3.5 h-3.5" />}
+            <span className="hidden xl:inline">{unlocked ? 'Vault' : 'Locked'}</span>
+          </Link>
 
           <button
             type="button"

@@ -5,6 +5,23 @@
     <link rel="icon" type="image/png" href="/brand/logo.png" />
     <link rel="apple-touch-icon" href="/brand/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Content-Security-Policy. Restricts where scripts, styles, images, and
+      network calls can come from so a stray XSS injection can't exfiltrate
+      encrypted data or load a remote payload.
+        - script-src 'self' + 'wasm-unsafe-eval' for Vite's dev HMR + production chunks.
+        - style-src allows Google Fonts CSS; font-src allows the fonts themselves.
+        - connect-src only to our Vercel /api endpoints, Anthropic (for OCR), and
+          ourselves. No trackers, no third-party analytics.
+        - frame-src 'none' blocks clickjacking of the app's own UI.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline'; connect-src 'self' https://api.anthropic.com https://*.vercel.app; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+    />
+    <meta http-equiv="Referrer-Policy" content="no-referrer" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="Permissions-Policy" content="geolocation=(self), camera=(self), microphone=(), payment=(), usb=()" />
     <meta name="description" content="ShiftGuard helps hourly workers verify their paychecks against hours worked. Built for anyone paid hourly who wants to make sure every dollar they earned shows up in their pay." />
     <meta name="theme-color" content="#0a0b10" />
     <meta property="og:title" content="ShiftGuard. Verify your paycheck in 30 seconds." />
