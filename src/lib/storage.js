@@ -16,6 +16,9 @@ const KEYS = {
   VAULT: 'shiftguard_vault',
   ANOMALIES: 'shiftguard_anomalies',
   REMINDERS: 'shiftguard_reminders_dismissed',
+  INTEGRATIONS: 'shiftguard_integrations',
+  GEOFENCES: 'shiftguard_geofences',
+  GEOFENCE_STATE: 'shiftguard_geofence_state',
 }
 
 const DEFAULT_PREFS = {
@@ -480,4 +483,135 @@ export function clearAll() {
     localStorage.removeItem(key)
   }
   notifyDataChanged()
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Integrations                                                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One record per connected third-party service. Shape:
+ *   {
+ *     id: string,          // adapter id, e.g. 'google_calendar'
+ *     name: string,        // human label
+ *     connectedAt: ISO,
+ *     auth: object | null, // adapter-specific non-secret metadata
+ *     token?: string,      // personal access token when needed (never leaves localStorage)
+ *     icalUrl?: string,    // for calendar adapters
+ *     extras?: object,
+ *     lastSyncAt?: ISO,
+ *     lastSyncCount?: number,
+ *   }
+ */
+export function getIntegrations() {
+  const list = read(KEYS.INTEGRATIONS)
+  return Array.isArray(list) ? list : []
+}
+
+export function getIntegration(id) {
+  return getIntegrations().find(i => i.id === id) || null
+}
+
+export function saveIntegration(id, patch) {
+  if (!id || !isRecord(patch)) return null
+  const all = getIntegrations()
+  const existing = all.find(i => i.id === id) || {}
+  const next = {
+    name: patch.name || existing.name || id,
+    connectedAt: existing.connectedAt || new Date().toISOString(),
+    ...existing,
+    ...patch,
+    id,
+  }
+  const replaced = all.some(i => i.id === id)
+    ? all.map(i => (i.id === id ? next : i))
+    : [...all, next]
+  write(KEYS.INTEGRATIONS, replaced)
+  return next
+}
+
+export function markIntegrationSynced(id, { count = 0 } = {}) {
+  const integration = getIntegration(id)
+  if (!integration) return null
+  return saveIntegration(id, {
+    lastSyncAt: new Date().toISOString(),
+    lastSyncCount: Number(count) || 0,
+  })
+}
+
+export function removeIntegration(id) {
+  const all = getIntegrations()
+  write(KEYS.INTEGRATIONS, all.filter(i => i.id !== id))
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Geofences                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Location-based shift reminders. Each fence is:
+ *   {
+ *     id: string,
+ *     label: string,               // "Memorial Hermann SW" etc.
+ *     lat: number, lng: number,
+ *     radiusM: number,             // default 200m
+ *     remindBeforeMin: number,     // minutes before a scheduled shift start to warn
+ *     remindOnEnter: boolean,      // default true
+ *     remindOnLeave: boolean,      // default true; helps catch missed clock-outs
+ *     linkedEmployer?: string,
+ *     note?: string,
+ *     createdAt: ISO,
+ *   }
+ */
+export function getGeofences() {
+  const list = read(KEYS.GEOFENCES)
+  return Array.isArray(list) ? list : []
+}
+
+export function saveGeofence(fence) {
+  if (!isRecord(fence)) return null
+  const fences = getGeofences()
+  const id = fence.id || `fence-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+  const existing = fences.find(f => f.id === id) || {}
+  const merged = {
+    createdAt: existing.createdAt || new Date().toISOString(),
+    remindOnEnter: true,
+    remindOnLeave: true,
+    ...existing,
+    ...fence,
+  }
+  const next = {
+    ...merged,
+    id,
+    lat: toFiniteNumber(merged.lat),
+    lng: toFiniteNumber(merged.lng),
+    radiusM: Math.max(25, toFiniteNumber(merged.radiusM) || 200),
+    remindBeforeMin: Math.max(0, toFiniteNumber(merged.remindBeforeMin ?? 15)),
+    label: String(merged.label || 'Unnamed location'),
+  }
+  const replaced = fences.some(f => f.id === id)
+    ? fences.map(f => (f.id === id ? next : f))
+    : [...fences, next]
+  write(KEYS.GEOFENCES, replaced)
+  return next
+}
+
+export function removeGeofence(id) {
+  const all = getGeofences()
+  write(KEYS.GEOFENCES, all.filter(f => f.id !== id))
+}
+
+/**
+ * Rolling enter/leave state per fence, used to debounce Notification pings so a user
+ * standing near the fence boundary doesn't get spammed.
+ *
+ * Shape: { [fenceId]: { inside: boolean, since: ISO, lastNotifiedAt?: ISO } }
+ */
+export function getGeofenceState() {
+  return read(KEYS.GEOFENCE_STATE) || {}
+}
+
+export function saveGeofenceState(state) {
+  if (!isRecord(state)) return
+  write(KEYS.GEOFENCE_STATE, state)
 }

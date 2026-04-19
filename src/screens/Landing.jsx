@@ -97,27 +97,28 @@ export default function Landing() {
               <span className="relative inline-flex">
                 <span className="h-2 w-2 rounded-full bg-terracotta sg-breath text-terracotta" />
               </span>
-              Built for workers with irregular hours
+              Paycheck verification for hourly workers
             </div>
 
             <h1 className="mt-6 text-[2.5rem] leading-[1.05] sm:text-6xl md:text-7xl font-semibold text-white tracking-[-0.03em] text-balance">
-              All your pay,{' '}
+              Upload your paystub.{' '}
               <br className="hidden sm:block" />
-              <span className="font-display text-terracotta">finally in one place.</span>
+              <span className="font-display text-terracotta">We check every line.</span>
             </h1>
 
             <p className="mt-6 text-base sm:text-lg text-slate-400 leading-relaxed max-w-[58ch]">
-              Upload a paystub, log a shift, or drop in next week&rsquo;s schedule. PayTrack explains every
-              deduction in plain English and flags discrepancies between what you worked and what you got paid.
+              Drop in a paystub and ShiftGuard reads it, explains every deduction in plain language, and
+              flags anything that does not match federal, state, and industry pay rules. Everything stays on
+              your device.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <MagneticButton
                 strength={14}
-                onClick={() => navigate('/start')}
+                onClick={() => navigate('/upload')}
                 className="sg-shine-host inline-flex items-center justify-center gap-2 px-6 py-4 bg-terracotta hover:bg-terracotta-dark text-white font-semibold rounded-xl text-base min-h-[52px] shadow-warm transition-colors"
               >
-                Get started
+                Upload a paystub
                 <ArrowRight className="w-4 h-4" />
               </MagneticButton>
 
@@ -363,10 +364,10 @@ export default function Landing() {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <MagneticButton
               strength={14}
-              onClick={() => navigate('/start')}
+              onClick={() => navigate('/upload')}
               className="sg-shine-host inline-flex items-center gap-2 px-7 py-4 bg-terracotta hover:bg-terracotta-dark text-white font-semibold rounded-xl text-base min-h-[52px] shadow-warm transition-colors"
             >
-              Get started
+              Upload a paystub
               <ArrowRight className="w-4 h-4" />
             </MagneticButton>
             <Link

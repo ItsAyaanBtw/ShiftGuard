@@ -13,6 +13,8 @@ import Pricing from './screens/Pricing'
 import Onboarding from './screens/Onboarding'
 import EntryPicker from './screens/EntryPicker'
 import PaystubDetail from './screens/PaystubDetail'
+import Integrations from './screens/Integrations'
+import Geofence from './screens/Geofence'
 
 const Dashboard = lazy(() => import('./screens/Dashboard'))
 
@@ -41,6 +43,8 @@ export default function App() {
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/start" element={<EntryPicker />} />
       <Route path="/paystub/:id" element={<PaystubDetail />} />
+      <Route path="/integrations" element={<Integrations />} />
+      <Route path="/geofence" element={<Geofence />} />
       <Route
         path="/dashboard"
         element={

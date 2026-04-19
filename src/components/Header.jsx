@@ -2,7 +2,7 @@ import { createElement, useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Shield, Clock, Camera, GitCompareArrows, FileText, BarChart3, CircleDollarSign,
-  ShieldCheck, Wrench, Menu, X,
+  ShieldCheck, Wrench, Plug, Menu, X,
 } from 'lucide-react'
 import WorkflowProgress from './WorkflowProgress'
 import ScrollProgress from './motion/ScrollProgress'
@@ -21,6 +21,7 @@ const PRIMARY_NAV = [
   { path: '/compare', label: 'Compare', icon: GitCompareArrows },
   { path: '/report', label: 'Report', icon: FileText },
   { path: '/tools', label: 'Tools', icon: Wrench },
+  { path: '/integrations', label: 'Integrations', icon: Plug },
   { path: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   { path: '/pricing', label: 'Pricing', icon: CircleDollarSign },
 ]
@@ -28,6 +29,7 @@ const PRIMARY_NAV = [
 const MOBILE_NAV = [
   ...PRIMARY_NAV.slice(0, 5),
   { path: '/tools', label: 'Tools', icon: Wrench },
+  { path: '/integrations', label: 'Integrations', icon: Plug },
   { path: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   { path: '/pricing', label: 'Pricing', icon: CircleDollarSign },
 ]
