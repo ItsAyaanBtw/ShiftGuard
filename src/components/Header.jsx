@@ -1,11 +1,12 @@
 import { createElement, useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
-  Shield, Clock, Camera, GitCompareArrows, FileText, BarChart3, CircleDollarSign,
+  Clock, Camera, GitCompareArrows, FileText, BarChart3, CircleDollarSign,
   ShieldCheck, Wrench, Plug, LogIn, LogOut, User, Menu, X,
 } from 'lucide-react'
 import WorkflowProgress from './WorkflowProgress'
 import ScrollProgress from './motion/ScrollProgress'
+import BrandMark from './BrandMark'
 import { getActiveAccount, isLoggedIn, logout } from '../lib/accounts'
 
 /**
@@ -80,7 +81,7 @@ export default function Header() {
             to="/"
             className="flex items-center gap-2 shrink-0 min-h-[44px] min-w-[44px] py-2 -ml-2 pl-2 pr-3 rounded-lg hover:bg-slate-800/60 transition-colors"
           >
-            <Shield className="w-6 h-6 text-terracotta" aria-hidden />
+            <BrandMark size={28} />
             <span className="text-lg font-semibold text-white tracking-tight whitespace-nowrap">ShiftGuard</span>
           </Link>
 

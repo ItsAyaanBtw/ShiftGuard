@@ -1,86 +1,125 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 520" font-family="'Courier New', Courier, monospace" font-size="12">
-  <rect width="680" height="520" fill="#ffffff"/>
-  <rect x="0" y="0" width="680" height="60" fill="#1a3a5c"/>
-  <text x="24" y="28" fill="#ffffff" font-size="18" font-weight="bold">ROSITA'S KITCHEN</text>
-  <text x="24" y="46" fill="#b0c4de" font-size="11">4821 S Congress Ave, Austin, TX 78745 | (512) 555-0147 | EIN: 74-3291056</text>
-  <text x="560" y="28" fill="#ffffff" font-size="11" text-anchor="end">EARNINGS STATEMENT</text>
-  <text x="560" y="46" fill="#b0c4de" font-size="10" text-anchor="end">Keep for your records</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1160" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif">
+  <rect width="900" height="1160" fill="#ffffff"/>
+  <rect x="0" y="0" width="900" height="104" fill="#b24a32"/>
+  <text x="48" y="52" fill="#ffffff" font-size="22" font-weight="700" letter-spacing="0.5">ROSITA&#39;S KITCHEN INC.</text>
+  <text x="48" y="76" fill="#ffd8c6" font-size="12">1417 South Lamar Blvd, Austin, TX 78704  |  Payroll Services  |  EIN: 74-2984017</text>
+  <text x="852" y="52" text-anchor="end" fill="#ffffff" font-size="16" font-weight="600">Pay Statement</text>
+  <text x="852" y="72" text-anchor="end" fill="#ffd8c6" font-size="11">Processed via Gusto</text>
+  <text x="852" y="90" text-anchor="end" fill="#ffd8c6" font-size="11">Retain for your records</text>
 
-  <text x="24" y="84" fill="#333" font-size="11" font-weight="bold">EMPLOYEE</text>
-  <text x="24" y="100" fill="#333" font-size="11">Maria G. Hernandez</text>
-  <text x="24" y="114" fill="#333" font-size="11">SSN: XXX-XX-4829</text>
-  <text x="24" y="128" fill="#333" font-size="11">Emp #: 10247</text>
+  <g font-size="11">
+    <rect x="48" y="136" width="804" height="108" fill="#fbf5f2" stroke="#d8dde8"/>
+    <text x="64" y="162" fill="#5f6b83" font-weight="600" letter-spacing="0.5">EMPLOYEE</text>
+    <text x="64" y="182" fill="#1a2541" font-size="13" font-weight="600">Maria G. Hernandez, Server</text>
+    <text x="64" y="200" fill="#1a2541">Employee ID: FOH-204</text>
+    <text x="64" y="216" fill="#1a2541">Section: Front of House</text>
+    <text x="64" y="232" fill="#1a2541">Status: Full-time, Tipped</text>
 
-  <text x="350" y="84" fill="#333" font-size="11" font-weight="bold">PAY PERIOD</text>
-  <text x="350" y="100" fill="#333" font-size="11">Start: 04/07/2026</text>
-  <text x="350" y="114" fill="#333" font-size="11">End:   04/12/2026</text>
-  <text x="350" y="128" fill="#333" font-size="11">Pay Date: 04/15/2026</text>
-  <text x="530" y="100" fill="#333" font-size="11">Check #: 058219</text>
-  <text x="530" y="114" fill="#333" font-size="11">Dept: Kitchen</text>
+    <text x="344" y="162" fill="#5f6b83" font-weight="600" letter-spacing="0.5">PAY PERIOD</text>
+    <text x="344" y="182" fill="#1a2541" font-size="13" font-weight="600">Apr 05, 2026 &#8211; Apr 11, 2026</text>
+    <text x="344" y="200" fill="#1a2541">Check Date: Apr 16, 2026</text>
+    <text x="344" y="216" fill="#1a2541">Check Number: 013748</text>
+    <text x="344" y="232" fill="#1a2541">Pay Frequency: Weekly</text>
 
-  <line x1="20" y1="142" x2="660" y2="142" stroke="#999" stroke-width="0.5"/>
+    <text x="604" y="162" fill="#5f6b83" font-weight="600" letter-spacing="0.5">POS &amp; TIPS</text>
+    <text x="604" y="182" fill="#1a2541" font-size="13" font-weight="600">Toast POS</text>
+    <text x="604" y="200" fill="#1a2541">Tip pool: FOH 80 / BOH 20</text>
+    <text x="604" y="216" fill="#1a2541">Tips declared: $342.18</text>
+    <text x="604" y="232" fill="#1a2541">Tip credit applied: $5.12/hr</text>
+  </g>
 
-  <rect x="20" y="150" width="640" height="22" fill="#e8edf2"/>
-  <text x="28" y="165" fill="#1a3a5c" font-size="11" font-weight="bold">EARNINGS</text>
-  <text x="260" y="165" fill="#1a3a5c" font-size="11" font-weight="bold" text-anchor="end">RATE</text>
-  <text x="360" y="165" fill="#1a3a5c" font-size="11" font-weight="bold" text-anchor="end">HOURS</text>
-  <text x="460" y="165" fill="#1a3a5c" font-size="11" font-weight="bold" text-anchor="end">CURRENT</text>
-  <text x="570" y="165" fill="#1a3a5c" font-size="11" font-weight="bold" text-anchor="end">YTD</text>
+  <g font-size="11">
+    <rect x="48" y="272" width="804" height="32" fill="#b24a32"/>
+    <text x="64" y="292" fill="#ffffff" font-weight="600">EARNINGS</text>
+    <text x="384" y="292" fill="#ffffff" font-weight="600" text-anchor="end">Rate</text>
+    <text x="484" y="292" fill="#ffffff" font-weight="600" text-anchor="end">Hours</text>
+    <text x="612" y="292" fill="#ffffff" font-weight="600" text-anchor="end">Current</text>
+    <text x="836" y="292" fill="#ffffff" font-weight="600" text-anchor="end">Year-to-date</text>
 
-  <text x="28" y="190" fill="#333" font-size="11">Regular</text>
-  <text x="260" y="190" fill="#333" font-size="11" text-anchor="end">15.00</text>
-  <text x="360" y="190" fill="#333" font-size="11" text-anchor="end">40.00</text>
-  <text x="460" y="190" fill="#333" font-size="11" text-anchor="end">600.00</text>
-  <text x="570" y="190" fill="#333" font-size="11" text-anchor="end">8,400.00</text>
+    <g fill="#1a2541">
+      <text x="64" y="324">Regular (tipped cash wage)</text>
+      <text x="384" y="324" text-anchor="end">$15.0000</text>
+      <text x="484" y="324" text-anchor="end">40.00</text>
+      <text x="612" y="324" text-anchor="end">$600.00</text>
+      <text x="836" y="324" text-anchor="end">$8,820.00</text>
 
-  <text x="28" y="208" fill="#999" font-size="11">Overtime</text>
-  <text x="260" y="208" fill="#999" font-size="11" text-anchor="end">0.00</text>
-  <text x="360" y="208" fill="#999" font-size="11" text-anchor="end">0.00</text>
-  <text x="460" y="208" fill="#999" font-size="11" text-anchor="end">0.00</text>
-  <text x="570" y="208" fill="#999" font-size="11" text-anchor="end">0.00</text>
+      <text x="64" y="346" fill="#78839e">Overtime (1.5&#215;)</text>
+      <text x="384" y="346" text-anchor="end" fill="#78839e">$22.5000</text>
+      <text x="484" y="346" text-anchor="end" fill="#78839e">0.00</text>
+      <text x="612" y="346" text-anchor="end" fill="#78839e">$0.00</text>
+      <text x="836" y="346" text-anchor="end" fill="#78839e">$112.50</text>
 
-  <line x1="380" y1="216" x2="580" y2="216" stroke="#999" stroke-width="0.5"/>
-  <text x="28" y="232" fill="#333" font-size="11" font-weight="bold">GROSS PAY</text>
-  <text x="460" y="232" fill="#333" font-size="11" font-weight="bold" text-anchor="end">$600.00</text>
-  <text x="570" y="232" fill="#333" font-size="11" font-weight="bold" text-anchor="end">$8,400.00</text>
+      <text x="64" y="368">Declared tips (cash + card)</text>
+      <text x="384" y="368" text-anchor="end">-</text>
+      <text x="484" y="368" text-anchor="end">-</text>
+      <text x="612" y="368" text-anchor="end">$342.18</text>
+      <text x="836" y="368" text-anchor="end">$4,842.07</text>
+    </g>
 
-  <line x1="20" y1="246" x2="660" y2="246" stroke="#999" stroke-width="0.5"/>
+    <line x1="48" y1="388" x2="852" y2="388" stroke="#d8dde8"/>
+    <text x="64" y="408" fill="#1a2541" font-weight="700">Total earnings</text>
+    <text x="612" y="408" fill="#1a2541" font-weight="700" text-anchor="end">$942.18</text>
+    <text x="836" y="408" fill="#1a2541" font-weight="700" text-anchor="end">$13,774.57</text>
+  </g>
 
-  <rect x="20" y="254" width="640" height="22" fill="#e8edf2"/>
-  <text x="28" y="269" fill="#1a3a5c" font-size="11" font-weight="bold">DEDUCTIONS</text>
-  <text x="460" y="269" fill="#1a3a5c" font-size="11" font-weight="bold" text-anchor="end">CURRENT</text>
-  <text x="570" y="269" fill="#1a3a5c" font-size="11" font-weight="bold" text-anchor="end">YTD</text>
+  <g font-size="11">
+    <rect x="48" y="440" width="804" height="32" fill="#b24a32"/>
+    <text x="64" y="460" fill="#ffffff" font-weight="600">DEDUCTIONS &amp; TAXES</text>
+    <text x="612" y="460" fill="#ffffff" font-weight="600" text-anchor="end">Current</text>
+    <text x="836" y="460" fill="#ffffff" font-weight="600" text-anchor="end">Year-to-date</text>
 
-  <text x="28" y="294" fill="#333" font-size="11">Federal Income Tax</text>
-  <text x="460" y="294" fill="#333" font-size="11" text-anchor="end">48.00</text>
-  <text x="570" y="294" fill="#333" font-size="11" text-anchor="end">672.00</text>
+    <g fill="#1a2541">
+      <text x="64" y="492">Federal Income Tax</text>
+      <text x="612" y="492" text-anchor="end">$48.00</text>
+      <text x="836" y="492" text-anchor="end">$652.80</text>
 
-  <text x="28" y="312" fill="#333" font-size="11">Social Security (6.2%)</text>
-  <text x="460" y="312" fill="#333" font-size="11" text-anchor="end">37.20</text>
-  <text x="570" y="312" fill="#333" font-size="11" text-anchor="end">520.80</text>
+      <text x="64" y="514">Social Security (FICA, 6.2%)</text>
+      <text x="612" y="514" text-anchor="end">$58.42</text>
+      <text x="836" y="514" text-anchor="end">$854.03</text>
 
-  <text x="28" y="330" fill="#333" font-size="11">Medicare (1.45%)</text>
-  <text x="460" y="330" fill="#333" font-size="11" text-anchor="end">8.70</text>
-  <text x="570" y="330" fill="#333" font-size="11" text-anchor="end">121.80</text>
+      <text x="64" y="536">Medicare (1.45%)</text>
+      <text x="612" y="536" text-anchor="end">$13.66</text>
+      <text x="836" y="536" text-anchor="end">$199.73</text>
 
-  <line x1="380" y1="340" x2="580" y2="340" stroke="#999" stroke-width="0.5"/>
-  <text x="28" y="356" fill="#333" font-size="11" font-weight="bold">TOTAL DEDUCTIONS</text>
-  <text x="460" y="356" fill="#333" font-size="11" font-weight="bold" text-anchor="end">$93.90</text>
-  <text x="570" y="356" fill="#333" font-size="11" font-weight="bold" text-anchor="end">$1,314.60</text>
+      <text x="64" y="558">Meal credit (post-tax)</text>
+      <text x="612" y="558" text-anchor="end">$8.00</text>
+      <text x="836" y="558" text-anchor="end">$96.00</text>
+    </g>
 
-  <line x1="20" y1="370" x2="660" y2="370" stroke="#999" stroke-width="0.5"/>
+    <line x1="48" y1="582" x2="852" y2="582" stroke="#d8dde8"/>
+    <text x="64" y="604" fill="#1a2541" font-weight="700">Total deductions</text>
+    <text x="612" y="604" fill="#1a2541" font-weight="700" text-anchor="end">$128.08</text>
+    <text x="836" y="604" fill="#1a2541" font-weight="700" text-anchor="end">$1,802.56</text>
+  </g>
 
-  <rect x="20" y="378" width="640" height="36" fill="#f0f5eb"/>
-  <text x="28" y="401" fill="#1a3a5c" font-size="14" font-weight="bold">NET PAY</text>
-  <text x="460" y="401" fill="#1a3a5c" font-size="14" font-weight="bold" text-anchor="end">$506.10</text>
+  <g>
+    <rect x="48" y="644" width="390" height="150" fill="#fbf5f2" stroke="#d8dde8"/>
+    <text x="64" y="672" fill="#5f6b83" font-size="11" font-weight="600" letter-spacing="0.5">PAY SUMMARY</text>
+    <line x1="64" y1="686" x2="422" y2="686" stroke="#d8dde8"/>
+    <text x="64" y="712" fill="#1a2541" font-size="12">Gross pay (wage + tips)</text>
+    <text x="422" y="712" text-anchor="end" fill="#1a2541" font-size="12">$942.18</text>
+    <text x="64" y="734" fill="#1a2541" font-size="12">Total deductions</text>
+    <text x="422" y="734" text-anchor="end" fill="#1a2541" font-size="12">&#8722;$128.08</text>
+    <line x1="64" y1="748" x2="422" y2="748" stroke="#d8dde8"/>
+    <text x="64" y="776" fill="#b24a32" font-size="16" font-weight="700">Net pay</text>
+    <text x="422" y="776" text-anchor="end" fill="#c45a1c" font-size="20" font-weight="700">$814.10</text>
 
-  <line x1="20" y1="424" x2="660" y2="424" stroke="#999" stroke-width="0.5"/>
+    <rect x="462" y="644" width="390" height="150" fill="#fbf5f2" stroke="#d8dde8"/>
+    <text x="478" y="672" fill="#5f6b83" font-size="11" font-weight="600" letter-spacing="0.5">YEAR-TO-DATE</text>
+    <line x1="478" y1="686" x2="836" y2="686" stroke="#d8dde8"/>
+    <text x="478" y="712" fill="#1a2541" font-size="12">YTD gross</text>
+    <text x="836" y="712" text-anchor="end" fill="#1a2541" font-size="12">$13,774.57</text>
+    <text x="478" y="734" fill="#1a2541" font-size="12">YTD taxes &amp; deductions</text>
+    <text x="836" y="734" text-anchor="end" fill="#1a2541" font-size="12">&#8722;$1,802.56</text>
+    <line x1="478" y1="748" x2="836" y2="748" stroke="#d8dde8"/>
+    <text x="478" y="776" fill="#b24a32" font-size="16" font-weight="700">YTD net</text>
+    <text x="836" y="776" text-anchor="end" fill="#1a2541" font-size="20" font-weight="700">$11,972.01</text>
+  </g>
 
-  <text x="24" y="444" fill="#333" font-size="10">Payment Method: Direct Deposit</text>
-  <text x="24" y="458" fill="#333" font-size="10">Account: ****7832  |  Routing: ****4501</text>
-
-  <text x="24" y="484" fill="#999" font-size="9">This statement is provided for informational purposes. Verify hours and pay with your supervisor.</text>
-  <text x="24" y="498" fill="#999" font-size="9">Rosita's Kitchen LLC  |  Processed by QuickPay Payroll Services</text>
-
-  <rect x="20" y="506" width="640" height="1" fill="#1a3a5c"/>
+  <g fill="#5f6b83" font-size="10">
+    <line x1="48" y1="1060" x2="852" y2="1060" stroke="#d8dde8"/>
+    <text x="48" y="1082">Employer address: 1417 South Lamar Blvd, Austin, TX 78704     Phone: (512) 555-0199     Payroll: payroll@rositaskitchen.com</text>
+    <text x="48" y="1100">Tip credit is applied under FLSA 203(m)(2). Employee must retain at least the Texas state minimum wage when tips + cash wage are combined.</text>
+    <text x="48" y="1118">Processed via Gusto &#8226; Document ID RK-PYSLI-013748-2026W15 &#8226; Page 1 of 1</text>
+  </g>
 </svg>

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import {
-  Shield, Mail, Lock, ArrowRight, Loader2, AlertCircle, CheckCircle2, UserPlus, LogIn,
+  Mail, Lock, ArrowRight, Loader2, AlertCircle, CheckCircle2, UserPlus, LogIn,
 } from 'lucide-react'
+import BrandMark from '../components/BrandMark'
 import {
   signUp, signIn, listAccounts, setActiveAccount, getActiveAccount, continueAsGuest,
 } from '../lib/accounts'
@@ -76,7 +77,7 @@ export default function Auth() {
       <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-10">
         <div className="w-full max-w-md">
           <Link to="/" className="flex items-center gap-2 mb-6 text-white">
-            <Shield className="w-6 h-6 text-terracotta" />
+            <BrandMark size={30} />
             <span className="text-lg font-semibold tracking-tight">ShiftGuard</span>
           </Link>
 

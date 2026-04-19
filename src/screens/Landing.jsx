@@ -5,6 +5,7 @@ import {
   Play, X, ChevronRight, Sparkles, Stethoscope, Truck, UtensilsCrossed,
   HardHat, ScanLine, Scale, Heart,
 } from 'lucide-react'
+import BrandMark from '../components/BrandMark'
 import Disclaimer from '../components/Disclaimer'
 import ScrollReveal from '../components/motion/ScrollReveal'
 import Marquee from '../components/motion/Marquee'
@@ -65,7 +66,7 @@ export default function Landing() {
       <nav className="relative z-30 px-4 sm:px-6 pt-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-md px-3 sm:px-5 py-2.5">
           <Link to="/" className="flex items-center gap-2 min-w-0 px-2 py-1.5 -ml-2 rounded-lg hover:bg-slate-800/60 transition-colors">
-            <Shield className="w-6 h-6 text-terracotta shrink-0" aria-hidden />
+            <BrandMark size={28} />
             <span className="text-base sm:text-lg font-semibold text-white tracking-tight truncate">ShiftGuard</span>
           </Link>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">

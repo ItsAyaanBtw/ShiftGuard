@@ -115,12 +115,12 @@ export default function Pricing() {
                   Deep Audit
                 </div>
                 <h2 className="mt-3 text-2xl sm:text-3xl font-semibold text-white tracking-tight">
-                  A 12-month look-back in one report
+                  A 6-month look-back in one report
                 </h2>
                 <p className="mt-2 text-slate-400 leading-relaxed text-sm">
-                  Upload up to a year of pay stubs at once. The full rule engine runs across every period,
-                  surfaces patterns like a differential paid at the wrong rate for months, and produces a
-                  branded PDF with citations you can hand to payroll or keep for your records.
+                  Upload up to six months of pay stubs at once. The full rule engine runs across every
+                  period, surfaces patterns like a differential paid at the wrong rate for months, and
+                  produces a branded PDF with citations you can hand to payroll or keep for your records.
                 </p>
                 <ul className="mt-4 flex flex-wrap gap-2 text-xs text-slate-300">
                   {['Cross-period reconciliation', 'Pattern detection', 'Rule citations', 'Branded PDF'].map(x => (
@@ -151,7 +151,7 @@ export default function Pricing() {
                     Coming soon
                   </span>
                   <p className="mt-3 text-[11px] text-slate-500 leading-relaxed">
-                    Billing isn&rsquo;t wired in this build. Pay once for a 12-month look-back report.
+                    Billing isn&rsquo;t wired in this build. Pay once for a 6-month look-back report.
                   </p>
                 </div>
               </div>

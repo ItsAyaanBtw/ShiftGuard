@@ -1,67 +1,125 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 520" font-family="'Courier New', Courier, monospace" font-size="12">
-  <rect width="680" height="520" fill="#ffffff"/>
-  <rect x="0" y="0" width="680" height="60" fill="#232f3e"/>
-  <text x="24" y="28" fill="#ffffff" font-size="18" font-weight="bold">NORTHSTAR FULFILLMENT LLC</text>
-  <text x="24" y="46" fill="#ff9900" font-size="11">2400 Logistics Pkwy, Dallas, TX 75212 | (214) 555-0188 | EIN: 75-2188044</text>
-  <text x="656" y="28" fill="#ffffff" font-size="11" text-anchor="end">PAY STATEMENT</text>
-  <text x="656" y="46" fill="#ff9900" font-size="10" text-anchor="end">Retain for tax purposes</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1160" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif">
+  <rect width="900" height="1160" fill="#ffffff"/>
+  <rect x="0" y="0" width="900" height="104" fill="#232f3e"/>
+  <text x="48" y="52" fill="#ffffff" font-size="22" font-weight="700" letter-spacing="0.5">NORTHSTAR FULFILLMENT LLC</text>
+  <text x="48" y="76" fill="#ff9900" font-size="12">2400 Logistics Parkway, Dallas, TX 75212  |  Payroll Processing Center  |  EIN: 75-2188044</text>
+  <text x="852" y="52" text-anchor="end" fill="#ffffff" font-size="16" font-weight="600">Pay Statement</text>
+  <text x="852" y="72" text-anchor="end" fill="#ff9900" font-size="11">Processed by UKG Pro</text>
+  <text x="852" y="90" text-anchor="end" fill="#ff9900" font-size="11">Retain for your records</text>
 
-  <text x="24" y="84" fill="#333" font-size="11" font-weight="bold">EMPLOYEE</text>
-  <text x="24" y="100" fill="#333" font-size="11">Marcus L. Holloway</text>
-  <text x="24" y="114" fill="#333" font-size="11">SSN: XXX-XX-2831</text>
-  <text x="24" y="128" fill="#333" font-size="11">Assoc #: A1-448572</text>
+  <g font-size="11">
+    <rect x="48" y="136" width="804" height="108" fill="#f6f7fa" stroke="#d8dde8"/>
+    <text x="64" y="162" fill="#5f6b83" font-weight="600" letter-spacing="0.5">EMPLOYEE</text>
+    <text x="64" y="182" fill="#1a2541" font-size="13" font-weight="600">Marcus L. Holloway</text>
+    <text x="64" y="200" fill="#1a2541">Associate ID: A1-448572</text>
+    <text x="64" y="216" fill="#1a2541">Department: Inbound Dock, Bldg 4</text>
+    <text x="64" y="232" fill="#1a2541">Classification: Tier 1, Non-exempt</text>
 
-  <text x="340" y="84" fill="#333" font-size="11" font-weight="bold">PAY INFORMATION</text>
-  <text x="340" y="100" fill="#333" font-size="11">Period: 04/05/2026 to 04/11/2026</text>
-  <text x="340" y="114" fill="#333" font-size="11">Pay Date: 04/17/2026</text>
-  <text x="340" y="128" fill="#333" font-size="11">Check #: 220418</text>
-  <text x="540" y="100" fill="#333" font-size="11">Dept: Inbound</text>
-  <text x="540" y="114" fill="#333" font-size="11">Class: T1 Associate</text>
+    <text x="344" y="162" fill="#5f6b83" font-weight="600" letter-spacing="0.5">PAY PERIOD</text>
+    <text x="344" y="182" fill="#1a2541" font-size="13" font-weight="600">Apr 05, 2026 &#8211; Apr 11, 2026</text>
+    <text x="344" y="200" fill="#1a2541">Check Date: Apr 17, 2026</text>
+    <text x="344" y="216" fill="#1a2541">Check Number: 220418</text>
+    <text x="344" y="232" fill="#1a2541">Pay Frequency: Weekly</text>
 
-  <line x1="24" y1="148" x2="656" y2="148" stroke="#cccccc"/>
+    <text x="604" y="162" fill="#5f6b83" font-weight="600" letter-spacing="0.5">DIRECT DEPOSIT</text>
+    <text x="604" y="182" fill="#1a2541" font-size="13" font-weight="600">Wells Fargo Checking</text>
+    <text x="604" y="200" fill="#1a2541">Account: XXXX-2831</text>
+    <text x="604" y="216" fill="#1a2541">Routing: XXXX-1030</text>
+    <text x="604" y="232" fill="#1a2541">Deposited: Apr 17, 2026</text>
+  </g>
 
-  <text x="24" y="170" fill="#333" font-size="11" font-weight="bold">EARNINGS</text>
-  <text x="24" y="186" fill="#555" font-size="10">Description</text>
-  <text x="320" y="186" fill="#555" font-size="10" text-anchor="end">Rate</text>
-  <text x="420" y="186" fill="#555" font-size="10" text-anchor="end">Hours</text>
-  <text x="540" y="186" fill="#555" font-size="10" text-anchor="end">Current</text>
-  <text x="656" y="186" fill="#555" font-size="10" text-anchor="end">YTD</text>
+  <g font-size="11">
+    <rect x="48" y="272" width="804" height="32" fill="#232f3e"/>
+    <text x="64" y="292" fill="#ffffff" font-weight="600">EARNINGS</text>
+    <text x="384" y="292" fill="#ffffff" font-weight="600" text-anchor="end">Rate</text>
+    <text x="484" y="292" fill="#ffffff" font-weight="600" text-anchor="end">Hours</text>
+    <text x="612" y="292" fill="#ffffff" font-weight="600" text-anchor="end">Current</text>
+    <text x="836" y="292" fill="#ffffff" font-weight="600" text-anchor="end">Year-to-date</text>
 
-  <text x="24" y="204" fill="#333">Regular</text>
-  <text x="320" y="204" fill="#333" text-anchor="end">$19.00</text>
-  <text x="420" y="204" fill="#333" text-anchor="end">40.00</text>
-  <text x="540" y="204" fill="#333" text-anchor="end">$760.00</text>
-  <text x="656" y="204" fill="#333" text-anchor="end">$11,552.00</text>
+    <g fill="#1a2541">
+      <text x="64" y="324">Regular</text>
+      <text x="384" y="324" text-anchor="end">$19.0000</text>
+      <text x="484" y="324" text-anchor="end">40.00</text>
+      <text x="612" y="324" text-anchor="end">$760.00</text>
+      <text x="836" y="324" text-anchor="end">$11,552.00</text>
 
-  <text x="24" y="220" fill="#333">Overtime (1.5x)</text>
-  <text x="320" y="220" fill="#333" text-anchor="end">$28.50</text>
-  <text x="420" y="220" fill="#333" text-anchor="end">8.00</text>
-  <text x="540" y="220" fill="#333" text-anchor="end">$228.00</text>
-  <text x="656" y="220" fill="#333" text-anchor="end">$1,368.00</text>
+      <text x="64" y="346">Overtime (1.5&#215;)</text>
+      <text x="384" y="346" text-anchor="end">$28.5000</text>
+      <text x="484" y="346" text-anchor="end">8.00</text>
+      <text x="612" y="346" text-anchor="end">$228.00</text>
+      <text x="836" y="346" text-anchor="end">$1,368.00</text>
 
-  <line x1="24" y1="236" x2="656" y2="236" stroke="#eeeeee"/>
+      <text x="64" y="368" fill="#78839e">Night differential (22:00 &#8211; 06:00)</text>
+      <text x="384" y="368" text-anchor="end" fill="#78839e">$1.0000</text>
+      <text x="484" y="368" text-anchor="end" fill="#78839e">24.00</text>
+      <text x="612" y="368" text-anchor="end" fill="#78839e">$24.00</text>
+      <text x="836" y="368" text-anchor="end" fill="#78839e">$488.00</text>
+    </g>
 
-  <text x="24" y="254" fill="#333" font-weight="bold">Gross Pay</text>
-  <text x="540" y="254" fill="#333" font-weight="bold" text-anchor="end">$988.00</text>
+    <line x1="48" y1="388" x2="852" y2="388" stroke="#d8dde8"/>
+    <text x="64" y="408" fill="#1a2541" font-weight="700">Total earnings</text>
+    <text x="612" y="408" fill="#1a2541" font-weight="700" text-anchor="end">$988.00</text>
+    <text x="836" y="408" fill="#1a2541" font-weight="700" text-anchor="end">$13,408.00</text>
+  </g>
 
-  <text x="24" y="288" fill="#333" font-size="11" font-weight="bold">DEDUCTIONS</text>
-  <text x="24" y="306" fill="#333">Federal Income Tax</text>
-  <text x="540" y="306" fill="#333" text-anchor="end">$98.80</text>
-  <text x="24" y="322" fill="#333">Social Security (6.2%)</text>
-  <text x="540" y="322" fill="#333" text-anchor="end">$61.26</text>
-  <text x="24" y="338" fill="#333">Medicare (1.45%)</text>
-  <text x="540" y="338" fill="#333" text-anchor="end">$14.33</text>
-  <text x="24" y="354" fill="#333">Medical Premium</text>
-  <text x="540" y="354" fill="#333" text-anchor="end">$42.00</text>
+  <g font-size="11">
+    <rect x="48" y="440" width="804" height="32" fill="#232f3e"/>
+    <text x="64" y="460" fill="#ffffff" font-weight="600">DEDUCTIONS &amp; TAXES</text>
+    <text x="612" y="460" fill="#ffffff" font-weight="600" text-anchor="end">Current</text>
+    <text x="836" y="460" fill="#ffffff" font-weight="600" text-anchor="end">Year-to-date</text>
 
-  <line x1="24" y1="370" x2="656" y2="370" stroke="#eeeeee"/>
-  <text x="24" y="390" fill="#333" font-weight="bold">Net Pay</text>
-  <text x="540" y="390" fill="#232f3e" font-weight="bold" text-anchor="end">$771.61</text>
+    <g fill="#1a2541">
+      <text x="64" y="492">Federal Income Tax</text>
+      <text x="612" y="492" text-anchor="end">$98.80</text>
+      <text x="836" y="492" text-anchor="end">$1,340.80</text>
 
-  <rect x="24" y="410" width="632" height="36" fill="#fff3e0" stroke="#ffcc99"/>
-  <text x="36" y="430" fill="#7a4a00" font-size="11" font-weight="bold">Note:</text>
-  <text x="84" y="430" fill="#7a4a00" font-size="11">Night differential $1.00/hr applies to shifts 22:00 to 06:00. Questions: payroll@northstar-fc.com.</text>
+      <text x="64" y="514">Social Security (FICA, 6.2%)</text>
+      <text x="612" y="514" text-anchor="end">$61.26</text>
+      <text x="836" y="514" text-anchor="end">$831.30</text>
 
-  <text x="24" y="476" fill="#666" font-size="10">Northstar Fulfillment LLC | 2400 Logistics Pkwy, Dallas, TX 75212</text>
-  <text x="24" y="492" fill="#666" font-size="10">This is an informational pay stub. Retain for your records.</text>
+      <text x="64" y="536">Medicare (1.45%)</text>
+      <text x="612" y="536" text-anchor="end">$14.33</text>
+      <text x="836" y="536" text-anchor="end">$194.42</text>
+
+      <text x="64" y="558">Medical Insurance (Pre-tax)</text>
+      <text x="612" y="558" text-anchor="end">$42.00</text>
+      <text x="836" y="558" text-anchor="end">$588.00</text>
+    </g>
+
+    <line x1="48" y1="582" x2="852" y2="582" stroke="#d8dde8"/>
+    <text x="64" y="604" fill="#1a2541" font-weight="700">Total deductions</text>
+    <text x="612" y="604" fill="#1a2541" font-weight="700" text-anchor="end">$216.39</text>
+    <text x="836" y="604" fill="#1a2541" font-weight="700" text-anchor="end">$2,954.52</text>
+  </g>
+
+  <g>
+    <rect x="48" y="644" width="390" height="150" fill="#f6f7fa" stroke="#d8dde8"/>
+    <text x="64" y="672" fill="#5f6b83" font-size="11" font-weight="600" letter-spacing="0.5">PAY SUMMARY</text>
+    <line x1="64" y1="686" x2="422" y2="686" stroke="#d8dde8"/>
+    <text x="64" y="712" fill="#1a2541" font-size="12">Gross pay</text>
+    <text x="422" y="712" text-anchor="end" fill="#1a2541" font-size="12">$988.00</text>
+    <text x="64" y="734" fill="#1a2541" font-size="12">Total deductions</text>
+    <text x="422" y="734" text-anchor="end" fill="#1a2541" font-size="12">&#8722;$216.39</text>
+    <line x1="64" y1="748" x2="422" y2="748" stroke="#d8dde8"/>
+    <text x="64" y="776" fill="#232f3e" font-size="16" font-weight="700">Net pay</text>
+    <text x="422" y="776" text-anchor="end" fill="#c45a1c" font-size="20" font-weight="700">$771.61</text>
+
+    <rect x="462" y="644" width="390" height="150" fill="#f6f7fa" stroke="#d8dde8"/>
+    <text x="478" y="672" fill="#5f6b83" font-size="11" font-weight="600" letter-spacing="0.5">YEAR-TO-DATE</text>
+    <line x1="478" y1="686" x2="836" y2="686" stroke="#d8dde8"/>
+    <text x="478" y="712" fill="#1a2541" font-size="12">YTD gross</text>
+    <text x="836" y="712" text-anchor="end" fill="#1a2541" font-size="12">$13,408.00</text>
+    <text x="478" y="734" fill="#1a2541" font-size="12">YTD taxes &amp; deductions</text>
+    <text x="836" y="734" text-anchor="end" fill="#1a2541" font-size="12">&#8722;$2,954.52</text>
+    <line x1="478" y1="748" x2="836" y2="748" stroke="#d8dde8"/>
+    <text x="478" y="776" fill="#232f3e" font-size="16" font-weight="700">YTD net</text>
+    <text x="836" y="776" text-anchor="end" fill="#1a2541" font-size="20" font-weight="700">$10,453.48</text>
+  </g>
+
+  <g fill="#5f6b83" font-size="10">
+    <line x1="48" y1="1060" x2="852" y2="1060" stroke="#d8dde8"/>
+    <text x="48" y="1082">Employer address: 2400 Logistics Parkway, Dallas, TX 75212     Phone: (214) 555-0188     Payroll: payroll@northstar-fc.com</text>
+    <text x="48" y="1100">Night differential of $1.00/hr applies between 22:00 and 06:00. Report discrepancies within 72 hours of deposit via the associate portal.</text>
+    <text x="48" y="1118">Processed via UKG Pro &#8226; Document ID NS-PYSLI-220418-2026W15 &#8226; Page 1 of 1</text>
+  </g>
 </svg>

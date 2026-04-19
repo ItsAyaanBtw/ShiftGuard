@@ -359,14 +359,18 @@ function ParsingStep({ imagePreview, onUndo }) {
   return (
     <div className="space-y-6">
       {imagePreview && (
-        <div className="rounded-xl overflow-hidden border border-slate-800">
-          <img src={imagePreview} alt="Pay stub" className="w-full max-h-64 object-contain bg-slate-900" />
+        <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-100 flex items-center justify-center p-3 sm:p-4">
+          <img
+            src={imagePreview}
+            alt="Paystub preview"
+            className="block w-full max-w-[720px] h-auto max-h-[520px] object-contain rounded-lg shadow-md"
+          />
         </div>
       )}
-      <div className="text-center py-6">
+      <div className="text-center py-4">
         <Loader2 className="w-10 h-10 text-terracotta mx-auto mb-4 animate-spin" />
         <p className="text-white font-medium mb-1">Reading your pay stub...</p>
-        <p className="text-slate-500 text-sm">This usually takes 5-10 seconds.</p>
+        <p className="text-slate-500 text-sm">This usually takes 5 to 10 seconds.</p>
         {onUndo && (
           <button
             type="button"
@@ -427,24 +431,13 @@ function ReviewStep({ data, setData, imagePreview, reviewSource, confirmError, o
         </div>
       )}
 
-      {/* Image thumbnail */}
+      {/* Paystub preview */}
       {imagePreview && (
-        <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-xl p-3">
-          <img src={imagePreview} alt="Pay stub" className="w-16 h-16 object-cover rounded-lg" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-white font-medium truncate">{data.employer_name || 'Pay stub'}</p>
-            {data.pay_period_start && (
-              <p className="text-xs text-slate-500">{data.pay_period_start} to {data.pay_period_end}</p>
-            )}
-          </div>
-          <button
-            onClick={onReset}
-            className="p-1.5 text-slate-500 hover:text-slate-300 cursor-pointer"
-            aria-label="Remove"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        <PaystubPreviewCard
+          imagePreview={imagePreview}
+          data={data}
+          onReset={onReset}
+        />
       )}
 
       {/* Editable fields */}
@@ -585,6 +578,52 @@ function ErrorStep({ message, onRetry, onManualEntry }) {
 }
 
 /* ---------- Shared ---------- */
+
+function PaystubPreviewCard({ imagePreview, data, onReset }) {
+  const [expanded, setExpanded] = useState(true)
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-800">
+        <div className="min-w-0">
+          <p className="text-sm text-white font-medium truncate">
+            {data.employer_name || 'Pay stub preview'}
+          </p>
+          {data.pay_period_start && (
+            <p className="text-xs text-slate-500 truncate">
+              {data.pay_period_start} to {data.pay_period_end}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={() => setExpanded(v => !v)}
+            className="text-[11px] font-medium text-slate-300 hover:text-white px-2 py-1 rounded border border-slate-700 hover:border-slate-600"
+          >
+            {expanded ? 'Hide image' : 'Show image'}
+          </button>
+          <button
+            type="button"
+            onClick={onReset}
+            className="p-1.5 text-slate-500 hover:text-red-300 rounded"
+            aria-label="Remove paystub"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+      {expanded && (
+        <div className="bg-slate-100 p-3 sm:p-4 flex items-center justify-center">
+          <img
+            src={imagePreview}
+            alt="Paystub preview"
+            className="block w-full max-w-[720px] h-auto object-contain rounded-lg shadow-md"
+          />
+        </div>
+      )}
+    </div>
+  )
+}
 
 function FieldGroup({ title, children }) {
   return (

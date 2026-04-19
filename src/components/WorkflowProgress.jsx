@@ -10,6 +10,11 @@ const STEPS = [
   { id: 'compare', label: 'Compare', path: '/compare', key: 'hasCompared' },
 ]
 
+// Only render the stepper on the actual flow routes; everything else (Dashboard,
+// Tools, Vault, Integrations, etc.) has its own landing surface and doesn't need
+// the extra header row stealing vertical space above the content.
+const FLOW_PATHS = new Set(['/log', '/verify', '/upload', '/compare', '/report'])
+
 export default function WorkflowProgress() {
   const { pathname } = useLocation()
   const [, bump] = useReducer(n => n + 1, 0)
@@ -20,7 +25,7 @@ export default function WorkflowProgress() {
     return () => window.removeEventListener('shiftguard-data-changed', onData)
   }, [])
 
-  if (pathname === '/') return null
+  if (!FLOW_PATHS.has(pathname)) return null
 
   const p = getWorkflowProgress()
 

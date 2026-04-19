@@ -5,8 +5,8 @@ import {
 } from 'recharts'
 import {
   TrendingUp, DollarSign, AlertTriangle,
-  ShieldAlert, ArrowRight, CheckCircle2,
-  CalendarClock, Bell, Receipt, Briefcase, Clock as ClockIcon, Car,
+  ShieldAlert, ArrowRight, CheckCircle2, Camera, GitCompareArrows, FileText,
+  CalendarClock, Bell, Receipt, Briefcase, Clock as ClockIcon, Car, Clock,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
@@ -562,6 +562,40 @@ function OverviewSection({ prefs }) {
           value={String(employerCount)}
         />
       </div>
+
+      <QuickActions />
+    </div>
+  )
+}
+
+function QuickActions() {
+  const items = [
+    { to: '/upload', label: 'Upload paystub', icon: Camera, tone: 'terracotta' },
+    { to: '/log', label: 'Log shift', icon: Clock, tone: 'default' },
+    { to: '/verify', label: 'Verify timesheet', icon: CheckCircle2, tone: 'default' },
+    { to: '/compare', label: 'Compare', icon: GitCompareArrows, tone: 'default' },
+    { to: '/report', label: 'Report', icon: FileText, tone: 'default' },
+  ]
+  return (
+    <div className="mt-4 flex flex-wrap gap-2">
+      {items.map(item => {
+        const Icon = item.icon
+        const terracotta = item.tone === 'terracotta'
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[13px] font-medium transition-colors min-h-[40px] ${
+              terracotta
+                ? 'bg-terracotta text-slate-950 hover:bg-terracotta/90'
+                : 'bg-slate-900 text-slate-200 hover:text-white border border-slate-800 hover:border-slate-700'
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            {item.label}
+          </Link>
+        )
+      })}
     </div>
   )
 }
