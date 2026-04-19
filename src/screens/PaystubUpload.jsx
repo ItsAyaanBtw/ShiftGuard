@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   Camera, Upload, FileImage, Loader2, CheckCircle2, AlertCircle,
   ArrowRight, ArrowLeft, X, Pencil, DollarSign
@@ -7,7 +7,11 @@ import {
 import Header from '../components/Header'
 import Disclaimer from '../components/Disclaimer'
 import { parsePaystub } from '../lib/claudeClient'
-import { savePaystub, getPaystub, getPaystubImage, savePaystubImage } from '../lib/storage'
+import {
+  savePaystub, getPaystub, getPaystubImage, savePaystubImage,
+  saveStubToVault, getPaystubVault, getUserPreferences, pushAnomaly,
+} from '../lib/storage'
+import { detectAnomalies } from '../lib/anomalies'
 
 const STEPS = {
   UPLOAD: 'upload',
@@ -26,15 +30,27 @@ export default function PaystubUpload() {
   const [parsedData, setParsedData] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [dragActive, setDragActive] = useState(false)
+  const [reviewSource, setReviewSource] = useState('scan')
+  const [confirmError, setConfirmError] = useState('')
 
   useEffect(() => {
-    const existing = getPaystub()
-    if (existing && existing.hourly_rate > 0) {
-      setParsedData(existing)
-      const img = getPaystubImage()
-      if (img) setImagePreview(img)
-      setStep(STEPS.REVIEW)
-    }
+    const id = requestAnimationFrame(() => {
+      const existing = getPaystub()
+      const hasNumbers =
+        existing &&
+        typeof existing === 'object' &&
+        (Number(existing.hourly_rate) > 0 ||
+          Number(existing.hours_paid) > 0 ||
+          Number(existing.gross_pay) > 0)
+      if (hasNumbers) {
+        setParsedData(existing)
+        const img = getPaystubImage()
+        if (img) setImagePreview(img)
+        setReviewSource('saved')
+        setStep(STEPS.REVIEW)
+      }
+    })
+    return () => cancelAnimationFrame(id)
   }, [])
 
   const processFile = useCallback(async (file) => {
@@ -53,19 +69,28 @@ export default function PaystubUpload() {
     const preview = URL.createObjectURL(file)
     setImagePreview(preview)
     setStep(STEPS.PARSING)
+    setConfirmError('')
 
     try {
       const base64 = await fileToBase64(file)
-      const result = await parsePaystub(base64, file.type)
+      let mediaType = file.type || 'image/jpeg'
+      if (mediaType === 'image/jpg') mediaType = 'image/jpeg'
+      if (!mediaType.startsWith('image/')) mediaType = 'image/jpeg'
+
+      const result = await parsePaystub(base64, mediaType)
       setParsedData(result)
+      setReviewSource('scan')
       setStep(STEPS.REVIEW)
     } catch (err) {
       console.error('Pay stub parsing failed:', err)
-      setErrorMsg(
-        err.message.includes('API')
-          ? 'Could not connect to the AI service. Check your API key and try again.'
-          : 'Could not read this pay stub. Try a clearer photo or enter the data manually.'
-      )
+      const msg = err.message || ''
+      if (msg.includes('API key') || msg.includes('Anthropic') || msg.includes('VITE_ANTHROPIC') || msg.includes('Scanning service is not configured')) {
+        setErrorMsg(msg)
+      } else if (msg.includes('API error') || msg.includes('timed out') || msg.includes('connect')) {
+        setErrorMsg('The scanner could not be reached. Check your connection, or enter pay stub data by hand.')
+      } else {
+        setErrorMsg(msg.length > 10 ? msg : 'We could not read this pay stub. Try a clearer photo or enter the data by hand.')
+      }
       setStep(STEPS.ERROR)
     }
   }, [])
@@ -91,12 +116,47 @@ export default function PaystubUpload() {
     setDragActive(false)
   }
 
+  function validateStub(d) {
+    const issues = []
+    if (!String(d.employer_name || '').trim()) issues.push('Employer name is required.')
+    const rate = Number(d.hourly_rate)
+    if (!rate || rate <= 0) issues.push('Hourly rate must be greater than zero.')
+    const hp = Number(d.hours_paid)
+    const otp = Number(d.overtime_hours_paid)
+    if (hp < 0 || otp < 0) issues.push('Hours cannot be negative.')
+    if (!String(d.pay_period_start || '').trim() || !String(d.pay_period_end || '').trim()) {
+      issues.push('Pay period start and end dates help match your shift log. Please add them.')
+    }
+    return issues
+  }
+
   function handleConfirm() {
+    const issues = validateStub(parsedData)
+    if (issues.length) {
+      setConfirmError(issues.join(' '))
+      return
+    }
+    setConfirmError('')
     savePaystub(parsedData)
+    const stableImage = imagePreview && !imagePreview.startsWith('blob:') ? imagePreview : null
+    if (stableImage) savePaystubImage(stableImage)
+    saveStubToVault(parsedData, stableImage)
+
+    // Continuous wage-check: run the cross-stub anomaly detector and post findings.
+    const prefs = getUserPreferences()
+    if (prefs.continuousWageCheck !== false) {
+      const anomalies = detectAnomalies(getPaystubVault())
+      for (const a of anomalies) pushAnomaly(a)
+    }
+
     navigate('/compare')
   }
 
   function handleManualEntry() {
+    if (imagePreview && imagePreview.startsWith('blob:')) URL.revokeObjectURL(imagePreview)
+    setImagePreview(null)
+    setConfirmError('')
+    setReviewSource('manual')
     setParsedData({
       employer_name: '',
       pay_period_start: '',
@@ -120,6 +180,8 @@ export default function PaystubUpload() {
     setImagePreview(null)
     setParsedData(null)
     setErrorMsg('')
+    setConfirmError('')
+    setReviewSource('scan')
   }
 
   useEffect(() => {
@@ -132,12 +194,22 @@ export default function PaystubUpload() {
     <div className="min-h-dvh bg-slate-950 flex flex-col">
       <Header />
 
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white mb-1">Pay Stub Upload</h1>
-          <p className="text-slate-400 text-sm">
-            Upload or photograph your pay stub. Our AI will read it for you.
-          </p>
+      <main className="relative z-10 flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-6 pb-20">
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold text-white tracking-tight mb-1">Upload your pay stub</h1>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              Snap a photo or drop the image in. Every field gets pulled out for you to review before anything is saved.
+              You can also type the numbers in by hand.
+            </p>
+          </div>
+          <Link
+            to="/vault"
+            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 rounded-lg px-3 py-2 transition-colors"
+          >
+            Open vault
+            <ArrowRight className="w-3 h-3" />
+          </Link>
         </div>
 
         {step === STEPS.UPLOAD && (
@@ -162,6 +234,8 @@ export default function PaystubUpload() {
             data={parsedData}
             setData={setParsedData}
             imagePreview={imagePreview}
+            reviewSource={reviewSource}
+            confirmError={confirmError}
             onConfirm={handleConfirm}
             onReset={handleReset}
           />
@@ -255,9 +329,9 @@ function UploadStep({
       {/* Privacy note */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mt-4">
         <p className="text-xs text-slate-400 leading-relaxed">
-          <span className="text-slate-300 font-medium">Privacy:</span> Your pay stub image is sent
-          directly to the AI for analysis and is never stored on any server. All data stays on your
-          device.
+          <span className="text-slate-300 font-medium">Privacy: </span>
+          Your image is sent straight to the parser and discarded after the response comes back.
+          Nothing is saved on a server you don&rsquo;t control. Everything else stays on this device.
         </p>
       </div>
     </div>
@@ -285,7 +359,7 @@ function ParsingStep({ imagePreview }) {
 
 /* ---------- Review Step ---------- */
 
-function ReviewStep({ data, setData, imagePreview, onConfirm, onReset }) {
+function ReviewStep({ data, setData, imagePreview, reviewSource, confirmError, onConfirm, onReset }) {
   function updateField(field, value) {
     setData(prev => ({ ...prev, [field]: value }))
   }
@@ -295,16 +369,39 @@ function ReviewStep({ data, setData, imagePreview, onConfirm, onReset }) {
     setData(prev => ({ ...prev, [field]: isNaN(num) ? 0 : num }))
   }
 
+  const BANNER_COPY = {
+    scan: {
+      title: 'Scan complete',
+      sub: 'Check each field against the paper or PDF pay stub before continuing.',
+    },
+    manual: {
+      title: 'Manual entry',
+      sub: 'Type values exactly as shown on the pay stub. You can attach a photo later by starting over.',
+    },
+    saved: {
+      title: 'Saved pay stub loaded',
+      sub: 'Update anything that changed, then run the comparison again.',
+    },
+  }
+  const banner = BANNER_COPY[reviewSource] || BANNER_COPY.scan
+
   return (
     <div className="space-y-6">
-      {/* Success indicator */}
+      {/* Status indicator */}
       <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-green-500/10 border border-green-500/20">
         <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
         <div>
-          <p className="text-green-400 text-sm font-medium">Pay stub parsed successfully</p>
-          <p className="text-slate-500 text-xs mt-0.5">Review the data below and correct anything that looks off.</p>
+          <p className="text-green-400 text-sm font-medium">{banner.title}</p>
+          <p className="text-slate-500 text-xs mt-0.5">{banner.sub}</p>
         </div>
       </div>
+
+      {confirmError && (
+        <div className="flex items-start gap-2 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/25 text-red-200 text-sm">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>{confirmError}</span>
+        </div>
+      )}
 
       {/* Image thumbnail */}
       {imagePreview && (

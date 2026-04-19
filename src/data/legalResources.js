@@ -14,7 +14,7 @@ export const LEGAL_AID_BY_STATE = {
     { name: 'Asian Americans Advancing Justice (Asian Law Caucus)', url: 'https://www.advancingjustice-alc.org', phone: '415-896-1701', email: 'info@advancingjustice-alc.org', focus: 'Immigrant workers in the Bay Area, multilingual', type: 'Legal Nonprofit' },
     { name: 'California Rural Legal Assistance (CRLA)', url: 'https://www.crla.org', phone: '1-800-337-0690', email: null, focus: 'Agricultural and rural workers across California', type: 'Legal Aid' },
     { name: 'Wage Justice Center', url: 'https://www.wagejustice.org', phone: '213-235-2362', email: 'info@wagejustice.org', focus: 'Low-wage immigrant workers, LA County', type: 'Worker Center' },
-    { name: 'CA DLSE (Labor Commissioner)', url: 'https://www.dir.ca.gov/dlse/howtofilewageclaim.htm', phone: '1-844-522-6734', email: null, focus: 'Official state wage claim filing (free, no attorney needed)', type: 'State Agency' },
+    { name: 'CA DLSE (Labor Commissioner)', url: 'https://www.dir.ca.gov/dlse/howtofilewageclaim.htm', phone: '1-844-522-6734', email: null, focus: 'Official state wage claim filing (free process)', type: 'State Agency' },
     { name: 'Worksafe', url: 'https://www.worksafe.org', phone: '510-302-1071', email: 'info@worksafe.org', focus: 'Worker health, safety, and wage protections, Oakland-based', type: 'Legal Nonprofit' },
     { name: 'U.S. DOL Wage and Hour Division, Los Angeles', url: 'https://www.dol.gov/agencies/whd/contact/local-offices', phone: '213-894-6375', email: null, focus: 'Federal FLSA complaint filing (free)', type: 'Federal Agency' },
   ],
@@ -59,7 +59,7 @@ export const ANTI_RETALIATION_INFO = {
     },
     FL: {
       title: 'Florida Protection (Federal FLSA applies)',
-      text: 'Florida does not have a state-level wage claim process, but federal FLSA protections apply fully. Workers who file federal wage complaints are protected from retaliation. If you experience retaliation, you may file a separate complaint with the U.S. Department of Labor or pursue a private lawsuit.',
+      text: 'Florida does not have a state-level wage claim process, but federal FLSA protections apply fully. Workers who file federal wage complaints are protected from retaliation. If you experience retaliation, you can file a separate complaint with the U.S. Department of Labor.',
     },
   },
 }

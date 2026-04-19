@@ -1,25 +1,51 @@
 @import "tailwindcss";
 
 @theme {
-  --color-slate-950: #0a0a0f;
-  --color-slate-900: #111118;
-  --color-slate-800: #1a1a24;
-  --color-slate-700: #2a2a38;
-  --color-slate-600: #3a3a4a;
-  --color-slate-400: #8a8a9a;
-  --color-slate-300: #b0b0be;
-  --color-slate-200: #d0d0da;
-  --color-terracotta: #c4784a;
-  --color-terracotta-light: #d4956e;
-  --color-terracotta-dark: #a85e34;
+  /* Off-black warm slate, never pure #000 */
+  --color-slate-950: #0a0b10;
+  --color-slate-925: #0e1018;
+  --color-slate-900: #12141d;
+  --color-slate-850: #171924;
+  --color-slate-800: #1c1f2c;
+  --color-slate-700: #262a39;
+  --color-slate-600: #3a3f51;
+  --color-slate-500: #6b7088;
+  --color-slate-400: #9498ab;
+  --color-slate-300: #b8bcd0;
+  --color-slate-200: #e2e4ee;
+  --color-slate-100: #f1f2f8;
+
+  --color-terracotta: #d9774a;
+  --color-terracotta-light: #ea9269;
+  --color-terracotta-dark: #b85d32;
+
   --color-red-500: #ef4444;
   --color-red-400: #f87171;
   --color-green-500: #22c55e;
   --color-green-400: #4ade80;
   --color-amber-500: #f59e0b;
+  --color-amber-400: #fbbf24;
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-serif: 'Georgia', 'Times New Roman', serif;
+  /* Typography: Geist sans, Newsreader serif accents, Geist Mono numerals */
+  --font-sans: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Newsreader', 'Georgia', serif;
+  --font-mono: 'Geist Mono', 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Easing tokens — taste-skill recommendations, never bounce/elastic */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -27,12 +53,218 @@ body {
   background-color: var(--color-slate-950);
   color: var(--color-slate-200);
   font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  /* Subtle ambient warm wash so sections never feel flat */
+  background-image:
+    radial-gradient(1100px 700px at 12% -10%, rgba(217, 119, 74, 0.08), transparent 60%),
+    radial-gradient(900px 600px at 100% 8%, rgba(217, 119, 74, 0.05), transparent 65%),
+    radial-gradient(1000px 700px at 50% 110%, rgba(60, 90, 140, 0.06), transparent 60%);
+  background-attachment: fixed;
 }
 
 #root {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+}
+
+button:not(:disabled),
+[role='button']:not(:disabled) {
+  cursor: pointer;
+}
+
+a[href] { cursor: pointer; }
+
+:focus-visible {
+  outline: 2px solid var(--color-terracotta);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Tabular numerals for any element marked .nums or .font-mono */
+.nums,
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Selection */
+::selection {
+  background: rgba(217, 119, 74, 0.35);
+  color: #fff;
+}
+
+/* Custom scrollbar — discreet, on-brand */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 152, 171, 0.18);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(217, 119, 74, 0.45); background-clip: padding-box; }
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+@keyframes sg-reveal {
+  from { opacity: 0; transform: translate3d(0, 18px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes sg-marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes sg-shimmer {
+  from { background-position: -150% 0; }
+  to   { background-position: 250% 0; }
+}
+
+@keyframes sg-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(0, -6px, 0); }
+}
+
+@keyframes sg-breath {
+  0%, 100% { transform: scale(1); opacity: 0.95; }
+  50%      { transform: scale(1.12); opacity: 0.6; }
+}
+
+@keyframes sg-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(2%, -1%, 0) scale(1.04); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes sg-shine {
+  0%   { transform: translateX(-120%) skewX(-12deg); opacity: 0; }
+  20%  { opacity: 0.6; }
+  100% { transform: translateX(220%) skewX(-12deg); opacity: 0; }
+}
+
+/* Reveal-on-scroll utility (used with IntersectionObserver) */
+.sg-reveal {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 700ms var(--ease-out-expo),
+    transform 700ms var(--ease-out-expo);
+  will-change: opacity, transform;
+}
+.sg-reveal[data-visible="true"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+/* Stagger children when parent has data-visible */
+.sg-stagger > * { transition-delay: 0ms; }
+.sg-stagger[data-visible="true"] > *:nth-child(1)  { transition-delay: 60ms; }
+.sg-stagger[data-visible="true"] > *:nth-child(2)  { transition-delay: 140ms; }
+.sg-stagger[data-visible="true"] > *:nth-child(3)  { transition-delay: 220ms; }
+.sg-stagger[data-visible="true"] > *:nth-child(4)  { transition-delay: 300ms; }
+.sg-stagger[data-visible="true"] > *:nth-child(5)  { transition-delay: 380ms; }
+.sg-stagger[data-visible="true"] > *:nth-child(6)  { transition-delay: 460ms; }
+
+/* Marquee */
+.sg-marquee {
+  display: flex;
+  gap: 0;
+  width: max-content;
+  animation: sg-marquee 38s linear infinite;
+}
+.sg-marquee--reverse { animation-direction: reverse; }
+.sg-marquee:hover { animation-play-state: paused; }
+
+/* Shimmer (skeleton + button highlight) */
+.sg-shimmer {
+  background: linear-gradient(
+    100deg,
+    rgba(255,255,255,0) 30%,
+    rgba(255,255,255,0.06) 50%,
+    rgba(255,255,255,0) 70%
+  );
+  background-size: 200% 100%;
+  animation: sg-shimmer 2.4s linear infinite;
+}
+
+/* Floating mock card */
+.sg-float { animation: sg-float 5s ease-in-out infinite; }
+
+/* Breathing dot for "live" status */
+.sg-breath::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.35;
+  animation: sg-breath 2.4s ease-in-out infinite;
+}
+
+/* Slow drifting ambient blob */
+.sg-drift { animation: sg-drift 22s ease-in-out infinite; }
+
+/* CTA shine sweep on hover */
+.sg-shine-host { position: relative; overflow: hidden; isolation: isolate; }
+.sg-shine-host::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
+  transform: translateX(-120%) skewX(-12deg);
+  pointer-events: none;
+}
+.sg-shine-host:hover::before {
+  animation: sg-shine 900ms var(--ease-out-quart) forwards;
+}
+
+/* Magnetic button base — JS will mutate transform */
+.sg-magnetic {
+  transition: transform 320ms var(--ease-out-expo);
+  will-change: transform;
+}
+
+/* Editorial display font helper */
+.font-display {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* Tinted soft shadow (hue-matched, not harsh black) */
+.shadow-warm {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.04) inset,
+    0 20px 50px -20px rgba(217, 119, 74, 0.18),
+    0 8px 30px -12px rgba(0, 0, 0, 0.45);
+}
+
+/* Inner-glass border for premium surfaces */
+.glass-edge {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+
+/* ==========================================================================
+   prefers-reduced-motion: kill non-essential motion gracefully
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .sg-reveal { opacity: 1 !important; transform: none !important; }
+  .sg-marquee { animation: none !important; }
+  .sg-float, .sg-drift, .sg-shimmer, .sg-breath::after { animation: none !important; }
+  html { scroll-behavior: auto; }
 }

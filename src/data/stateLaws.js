@@ -199,6 +199,7 @@ const stateLaws = {
   },
 }
 
+export { healthcarePayRules } from './healthcarePayRules'
 export default stateLaws
 
 /**

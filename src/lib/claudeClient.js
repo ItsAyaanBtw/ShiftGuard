@@ -1,61 +1,19 @@
-const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY
-const TIMEOUT_MS = 45_000
+/**
+ * Claude client with two call paths:
+ *   1) Direct browser call to api.anthropic.com when VITE_ANTHROPIC_API_KEY is present.
+ *      This is the local-dev-friendly path. Requires the header
+ *      "anthropic-dangerous-direct-browser-access: true" that Anthropic added in Aug 2024.
+ *   2) Vercel Edge proxy at /api/claude (reads ANTHROPIC_API_KEY server-side).
+ *      This is the production path and keeps the key off the client.
+ *
+ * The client prefers direct calls when it has a key; otherwise it falls back to the proxy.
+ * Callers never have to know which path was used.
+ */
 
-async function callClaude(messages, { maxTokens = 2048, retries = 1 } = {}) {
-  const headers = { 'Content-Type': 'application/json' }
-
-  if (API_KEY) {
-    headers['x-api-key'] = API_KEY
-    headers['anthropic-version'] = '2023-06-01'
-    headers['anthropic-dangerous-direct-browser-access'] = 'true'
-  }
-
-  const body = JSON.stringify({
-    model: 'claude-sonnet-4-6-20250514',
-    max_tokens: maxTokens,
-    messages,
-  })
-
-  let lastError
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
-
-      const res = await fetch('/api/claude', {
-        method: 'POST',
-        headers,
-        body,
-        signal: controller.signal,
-      })
-
-      clearTimeout(timer)
-
-      if (!res.ok) {
-        const errText = await res.text()
-        throw new Error(`API error (${res.status}): ${errText}`)
-      }
-
-      const data = await res.json()
-
-      if (!data.content || !data.content[0]?.text) {
-        throw new Error('Empty response from AI service')
-      }
-
-      return data.content[0].text
-    } catch (err) {
-      lastError = err
-      if (err.name === 'AbortError') {
-        lastError = new Error('API request timed out. Please try again.')
-      }
-      if (attempt < retries) {
-        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
-      }
-    }
-  }
-
-  throw lastError
-}
+const DIRECT_KEY = (import.meta.env.VITE_ANTHROPIC_API_KEY || '').trim()
+const MODEL = (import.meta.env.VITE_ANTHROPIC_MODEL || 'claude-sonnet-4-6-20250514').trim()
+const TIMEOUT_MS = 60_000
+const PLACEHOLDER_KEYS = new Set(['', 'your_api_key_here', 'sk-ant-api03-REPLACE_ME'])
 
 const PAYSTUB_DEFAULTS = {
   employer_name: '',
@@ -71,13 +29,335 @@ const PAYSTUB_DEFAULTS = {
   net_pay: 0,
 }
 
+const TIMESHEET_DEFAULTS = {
+  source_label: '',
+  employer_name: '',
+  employee_name: '',
+  period_start: '',
+  period_end: '',
+  parse_confidence: 0,
+  notes: '',
+  entries: [],
+}
+
+function toNum(v) {
+  const n = parseFloat(v)
+  return Number.isFinite(n) ? n : 0
+}
+
+function clampConfidence(v) {
+  const n = toNum(v)
+  if (n <= 0) return 0
+  if (n >= 1) return 1
+  return n
+}
+
+function normalizeStr(v) {
+  return typeof v === 'string' ? v.trim() : ''
+}
+
+function hasDirectKey() {
+  if (!DIRECT_KEY || PLACEHOLDER_KEYS.has(DIRECT_KEY)) return false
+  return DIRECT_KEY.length >= 20
+}
+
+/**
+ * True if EITHER the direct browser key or the server proxy is reachable.
+ * (We can't synchronously know about the proxy, so we assume "yes" and let the
+ * first request surface a 500 with type:'config' if it isn't.)
+ */
+export function hasAnthropicApiKey() {
+  return true
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Low-level call                                                             */
+/* -------------------------------------------------------------------------- */
+
+export async function callClaude(requestBody, { retries = 1 } = {}) {
+  const bodyText = JSON.stringify({ model: MODEL, ...requestBody })
+  let lastError
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+
+    try {
+      let res
+      if (hasDirectKey()) {
+        res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': DIRECT_KEY,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true',
+          },
+          body: bodyText,
+          signal: controller.signal,
+        })
+      } else {
+        res = await fetch('/api/claude', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: bodyText,
+          signal: controller.signal,
+        })
+      }
+      clearTimeout(timer)
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '')
+        let msg = `API error ${res.status}`
+        if (errText) {
+          try {
+            const j = JSON.parse(errText)
+            if (j.type === 'config' || (j.error && /ANTHROPIC_API_KEY/.test(j.error))) {
+              throw new Error(
+                'Scanning service is not configured. Add VITE_ANTHROPIC_API_KEY to .env.local for local dev, or set ANTHROPIC_API_KEY on the server. You can also enter the data by hand below.',
+              )
+            }
+            if (j.error?.message) msg = j.error.message
+            else if (typeof j.error === 'string') msg = j.error
+          } catch {
+            msg += `: ${errText.slice(0, 200)}`
+          }
+        }
+        throw new Error(msg)
+      }
+
+      const data = await res.json()
+      if (data?.error) {
+        throw new Error(typeof data.error === 'string' ? data.error : data.error.message || 'Scanning service returned an error')
+      }
+      return data
+    } catch (err) {
+      clearTimeout(timer)
+      lastError = err.name === 'AbortError' ? new Error('Request timed out. Please try again.') : err
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 800 * (attempt + 1)))
+      }
+    }
+  }
+
+  throw lastError
+}
+
+/**
+ * Find the tool_use block in a Claude response and return its structured input.
+ * Falls back to text-JSON extraction if the model refused to call the tool.
+ */
+function extractToolInput(response, toolName) {
+  const blocks = Array.isArray(response?.content) ? response.content : []
+  const toolBlock = blocks.find(b => b?.type === 'tool_use' && (!toolName || b.name === toolName))
+  if (toolBlock && toolBlock.input && typeof toolBlock.input === 'object') {
+    return toolBlock.input
+  }
+
+  const textBlock = blocks.find(b => b?.type === 'text' && typeof b.text === 'string')
+  if (!textBlock) throw new Error('The scanning service returned no usable content.')
+  const cleaned = textBlock.text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()
+  try {
+    return JSON.parse(cleaned)
+  } catch {
+    const match = cleaned.match(/\{[\s\S]*\}/)
+    if (match) return JSON.parse(match[0])
+    throw new Error('The response was not valid JSON. Try again with a clearer image.')
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Tool schemas                                                                */
+/* -------------------------------------------------------------------------- */
+
+const PAYSTUB_TOOL = {
+  name: 'record_paystub',
+  description:
+    'Record every numeric field extracted from a US pay stub. Use null for anything you cannot read with confidence.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      employer_name: { type: 'string', description: 'Name of the employer as printed.' },
+      pay_period_start: { type: 'string', description: 'Pay period start in YYYY-MM-DD; empty string if not visible.' },
+      pay_period_end: { type: 'string', description: 'Pay period end in YYYY-MM-DD; empty string if not visible.' },
+      hours_paid: { type: 'number', description: 'Regular hours paid (not overtime). 0 if not visible.' },
+      overtime_hours_paid: { type: 'number', description: 'Overtime hours paid on the stub. 0 if not visible.' },
+      hourly_rate: { type: 'number', description: 'Base hourly rate in dollars. 0 if not hourly.' },
+      overtime_rate: { type: 'number', description: 'Overtime hourly rate in dollars. 0 if not shown.' },
+      gross_pay: { type: 'number', description: 'Total gross pay for the period.' },
+      tips_reported: { type: 'number', description: 'Tips reported on this stub. 0 if none.' },
+      net_pay: { type: 'number', description: 'Net (take-home) pay for the period.' },
+      deductions: {
+        type: 'array',
+        description: 'Every pre-tax, tax, and post-tax deduction line.',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            amount: { type: 'number' },
+          },
+          required: ['name', 'amount'],
+        },
+      },
+      parse_confidence: {
+        type: 'number',
+        description: '0.0 to 1.0 self-reported confidence. Use < 0.5 for blurry or non-stub images.',
+      },
+      notes: {
+        type: 'string',
+        description: 'Short note if anything looked unusual, missing, or ambiguous.',
+      },
+    },
+    required: ['employer_name', 'hours_paid', 'hourly_rate', 'gross_pay'],
+  },
+}
+
+const TIMESHEET_TOOL = {
+  name: 'record_timesheet',
+  description:
+    'Record clock-in and clock-out punches from an employer-issued time record (Kronos, UKG, Workday, ADP, Paycom, Dayforce, Paylocity, Oracle, a posted schedule, or similar).',
+  input_schema: {
+    type: 'object',
+    properties: {
+      source_label: {
+        type: 'string',
+        description: 'Short label for the document (e.g., "Kronos Timecard", "Workday Time Tracking", "Posted schedule").',
+      },
+      employer_name: { type: 'string' },
+      employee_name: { type: 'string' },
+      period_start: { type: 'string', description: 'YYYY-MM-DD if a period range is visible. Empty string otherwise.' },
+      period_end: { type: 'string' },
+      parse_confidence: {
+        type: 'number',
+        description: '0.0 to 1.0. Use < 0.5 for unreadable documents or non-time-record images.',
+      },
+      notes: { type: 'string' },
+      entries: {
+        type: 'array',
+        description: 'One entry per shift or punch pair. Overnight shifts should use the DATE OF CLOCK-IN.',
+        items: {
+          type: 'object',
+          properties: {
+            date: { type: 'string', description: 'YYYY-MM-DD (clock-in date).' },
+            in_time: { type: 'string', description: 'HH:MM in 24h local time.' },
+            out_time: { type: 'string', description: 'HH:MM in 24h local time.' },
+            break_minutes: { type: 'number', description: 'Total unpaid break minutes. 0 if none.' },
+            department: { type: 'string' },
+            shift_notes: { type: 'string' },
+          },
+          required: ['date', 'in_time', 'out_time'],
+        },
+      },
+    },
+    required: ['entries', 'parse_confidence'],
+  },
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Public API                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Parse a pay stub image. Uses forced tool use for reliable structured output.
+ */
+export async function parsePaystub(imageBase64, mediaType = 'image/jpeg') {
+  if (!imageBase64) {
+    throw new Error('No image data to scan.')
+  }
+
+  const systemPrompt =
+    'You extract numeric fields from US pay stubs. Rules: (1) Always call record_paystub. ' +
+    '(2) Use null or 0 for fields you cannot read confidently. (3) Never invent numbers. ' +
+    '(4) Strip currency symbols and commas. (5) Dates in YYYY-MM-DD. (6) Redact SSN and ' +
+    'full bank account numbers. (7) If the image is not a pay stub, call the tool with ' +
+    'parse_confidence < 0.3 and a short note.'
+
+  const response = await callClaude({
+    max_tokens: 2048,
+    system: systemPrompt,
+    tools: [PAYSTUB_TOOL],
+    tool_choice: { type: 'tool', name: PAYSTUB_TOOL.name },
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: normalizeMediaType(mediaType), data: imageBase64 },
+          },
+          { type: 'text', text: 'Extract every field from this pay stub.' },
+        ],
+      },
+    ],
+  })
+
+  return validatePaystubData(extractToolInput(response, PAYSTUB_TOOL.name))
+}
+
+/**
+ * Parse an employer-issued timesheet (image or PDF). Returns a normalized timesheet record
+ * that callers then reconcile against self-reported shifts.
+ */
+export async function parseTimesheet(fileBase64, mediaType = 'image/jpeg') {
+  const systemPrompt =
+    'You extract clock-in/clock-out punches from US employer time records. Rules: ' +
+    '(1) Always call record_timesheet. (2) Times in HH:MM 24h local. Infer AM/PM when an ' +
+    'AM/PM column is present. (3) Overnight shifts: use the clock-in date. (4) Do not ' +
+    'fabricate entries. If the document is not a time record, call the tool with ' +
+    'parse_confidence < 0.3 and explain in notes.'
+
+  const isPdf = /pdf/i.test(mediaType)
+  const normalizedMedia = isPdf ? 'application/pdf' : normalizeMediaType(mediaType)
+  const contentBlock = isPdf
+    ? {
+        type: 'document',
+        source: { type: 'base64', media_type: 'application/pdf', data: fileBase64 },
+      }
+    : {
+        type: 'image',
+        source: { type: 'base64', media_type: normalizedMedia, data: fileBase64 },
+      }
+
+  const response = await callClaude({
+    max_tokens: 4096,
+    system: systemPrompt,
+    tools: [TIMESHEET_TOOL],
+    tool_choice: { type: 'tool', name: TIMESHEET_TOOL.name },
+    messages: [
+      {
+        role: 'user',
+        content: [
+          contentBlock,
+          {
+            type: 'text',
+            text: 'List every shift or punch pair you can read from this time record.',
+          },
+        ],
+      },
+    ],
+  })
+
+  return validateTimesheetData(extractToolInput(response, TIMESHEET_TOOL.name))
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Validators                                                                  */
+/* -------------------------------------------------------------------------- */
+
+function normalizeMediaType(mediaType) {
+  const m = String(mediaType || '').toLowerCase()
+  if (m === 'image/jpg') return 'image/jpeg'
+  if (m.startsWith('image/')) return m
+  return 'image/jpeg'
+}
+
 function validatePaystubData(raw) {
   const result = { ...PAYSTUB_DEFAULTS }
   if (!raw || typeof raw !== 'object') return result
 
-  result.employer_name = String(raw.employer_name || '')
-  result.pay_period_start = String(raw.pay_period_start || '')
-  result.pay_period_end = String(raw.pay_period_end || '')
+  result.employer_name = normalizeStr(raw.employer_name)
+  result.pay_period_start = normalizeStr(raw.pay_period_start)
+  result.pay_period_end = normalizeStr(raw.pay_period_end)
   result.hours_paid = toNum(raw.hours_paid)
   result.overtime_hours_paid = toNum(raw.overtime_hours_paid)
   result.hourly_rate = toNum(raw.hourly_rate)
@@ -85,207 +365,51 @@ function validatePaystubData(raw) {
   result.gross_pay = toNum(raw.gross_pay)
   result.tips_reported = toNum(raw.tips_reported)
   result.net_pay = toNum(raw.net_pay)
+  result.parse_confidence = clampConfidence(raw.parse_confidence)
+  result.notes = normalizeStr(raw.notes)
 
   if (Array.isArray(raw.deductions)) {
     result.deductions = raw.deductions
       .filter(d => d && typeof d === 'object')
-      .map(d => ({ name: String(d.name || ''), amount: toNum(d.amount) }))
+      .map(d => ({ name: normalizeStr(d.name), amount: toNum(d.amount) }))
   }
 
   return result
 }
 
-function toNum(v) {
-  const n = parseFloat(v)
-  return isNaN(n) ? 0 : n
-}
+function validateTimesheetData(raw) {
+  const result = { ...TIMESHEET_DEFAULTS }
+  if (!raw || typeof raw !== 'object') return result
 
-/**
- * Parse a pay stub image using Claude's vision capability.
- */
-export async function parsePaystub(imageBase64, mediaType = 'image/jpeg') {
-  const prompt = `You are a pay stub parser. Analyze this pay stub image and extract the following data into a JSON object. Be precise with numbers. If a field is not visible or not applicable, use 0 for numbers and "" for strings.
+  result.source_label = normalizeStr(raw.source_label)
+  result.employer_name = normalizeStr(raw.employer_name)
+  result.employee_name = normalizeStr(raw.employee_name)
+  result.period_start = normalizeStr(raw.period_start)
+  result.period_end = normalizeStr(raw.period_end)
+  result.parse_confidence = clampConfidence(raw.parse_confidence)
+  result.notes = normalizeStr(raw.notes)
 
-Return ONLY valid JSON with exactly this structure, no markdown, no explanation:
-{
-  "employer_name": "string",
-  "pay_period_start": "YYYY-MM-DD",
-  "pay_period_end": "YYYY-MM-DD",
-  "hours_paid": 0,
-  "overtime_hours_paid": 0,
-  "hourly_rate": 0.00,
-  "overtime_rate": 0.00,
-  "gross_pay": 0.00,
-  "deductions": [{"name": "string", "amount": 0.00}],
-  "tips_reported": 0.00,
-  "net_pay": 0.00
-}`
-
-  const text = await callClaude([
-    {
-      role: 'user',
-      content: [
-        {
-          type: 'image',
-          source: { type: 'base64', media_type: mediaType, data: imageBase64 },
-        },
-        { type: 'text', text: prompt },
-      ],
-    },
-  ], { retries: 1 })
-
-  const cleaned = text
-    .replace(/```json\s*/gi, '')
-    .replace(/```\s*/g, '')
-    .trim()
-
-  let parsed
-  try {
-    parsed = JSON.parse(cleaned)
-  } catch {
-    const match = cleaned.match(/\{[\s\S]*\}/)
-    if (match) {
-      parsed = JSON.parse(match[0])
-    } else {
-      throw new Error('Could not parse AI response as JSON. Try a clearer photo or enter data manually.')
-    }
+  if (Array.isArray(raw.entries)) {
+    result.entries = raw.entries
+      .filter(e => e && typeof e === 'object' && e.date && e.in_time && e.out_time)
+      .map(e => ({
+        date: normalizeStr(e.date),
+        in_time: normalizeStr(e.in_time),
+        out_time: normalizeStr(e.out_time),
+        break_minutes: Math.max(0, Math.round(toNum(e.break_minutes))),
+        department: normalizeStr(e.department),
+        shift_notes: normalizeStr(e.shift_notes),
+      }))
   }
 
-  return validatePaystubData(parsed)
+  return result
 }
 
-import { buildDemandLetter, buildComplaintForm, buildEvidenceSummary } from './documentTemplates'
-
-const hasApiKey = () => API_KEY && API_KEY !== 'your_api_key_here'
-
-/**
- * Generate a demand letter. Uses Claude if API key is configured, otherwise local template.
- */
-export async function generateDemandLetter(params) {
-  if (!hasApiKey()) return buildDemandLetter(params)
-
-  try {
-    const violationList = params.violations
-      .map(v => `- ${v.explanation} (${v.citation}): $${v.dollarAmount.toFixed(2)}`)
-      .join('\n')
-
-    const prompt = `You are a legal document assistant. Generate a formal demand letter from a worker to their employer regarding unpaid wages. The letter is a template the worker can customize.
-
-Details:
-- Worker name: ${params.workerName || '[WORKER NAME]'}
-- Employer name: ${params.employerName || '[EMPLOYER NAME]'}
-- Pay period: ${params.payPeriod || '[PAY PERIOD]'}
-- State: ${params.stateName} (${params.stateCode})
-- Total amount owed: $${params.totalOwed.toFixed(2)}
-- Violations found:
-${violationList}
-- State complaint agency: ${params.agencyName}
-
-Requirements:
-- Professional, firm tone. Not aggressive, not meek.
-- Cite the specific statutes for each violation.
-- Request full payment within 10 business days.
-- Note the worker's right to file a complaint with ${params.agencyName} and to seek legal counsel.
-- Note that under the FLSA, prevailing plaintiffs may recover liquidated damages (double the unpaid wages) plus attorney fees.
-- Include today's date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.
-- End with signature line for the worker.
-- Add a line at the top: "TEMPLATE: NOT LEGAL ADVICE. Review and customize before sending. Consult an attorney."
-- Do NOT use em dashes. Use commas or periods instead.
-- Keep it to one page (roughly 400-500 words).
-- Return plain text only, no markdown formatting.`
-
-    return await callClaude([{ role: 'user', content: prompt }], { maxTokens: 1500 })
-  } catch {
-    return buildDemandLetter(params)
-  }
-}
-
-/**
- * Generate a complaint form. Uses Claude if API key is configured, otherwise local template.
- */
-export async function generateComplaintForm(params) {
-  if (!hasApiKey()) return buildComplaintForm(params)
-
-  try {
-    const violationList = params.violations
-      .map(v => `- ${v.explanation} (${v.citation}): $${v.dollarAmount.toFixed(2)}`)
-      .join('\n')
-
-    const prompt = `You are a legal document assistant. Generate the text content a worker would need to fill out a ${params.formName} with the ${params.agencyName} in ${params.stateName}.
-
-Details:
-- Claimant name: ${params.workerName || '[WORKER NAME]'}
-- Employer name: ${params.employerName || '[EMPLOYER NAME]'}
-- Employer address: ${params.employerAddress || '[EMPLOYER ADDRESS]'}
-- Pay period in dispute: ${params.payPeriod || '[PAY PERIOD]'}
-- Total wages owed: $${params.totalOwed.toFixed(2)}
-- Violations:
-${violationList}
-
-Requirements:
-- Format as labeled fields the worker can copy into the actual complaint form.
-- Include: claimant info section, employer info section, description of violations, wages claimed, dates of employment.
-- Write the "description of claim" narrative in first person, clearly and factually.
-- Cite specific statutes.
-- Note this is for the ${params.formName} filed with ${params.agencyName}.
-- Add a line at the top: "TEMPLATE: NOT LEGAL ADVICE. Use this as a guide when filling out the official ${params.formName}."
-- Do NOT use em dashes.
-- Return plain text only, no markdown.`
-
-    return await callClaude([{ role: 'user', content: prompt }], { maxTokens: 1500 })
-  } catch {
-    return buildComplaintForm(params)
-  }
-}
-
-/**
- * Generate an evidence summary. Uses Claude if API key is configured, otherwise local template.
- */
-export async function generateEvidenceSummary(params) {
-  if (!hasApiKey()) return buildEvidenceSummary(params)
-
-  try {
-    const violationList = params.violations
-      .map(v => `- [${v.severity.toUpperCase()}] ${v.type}: ${v.explanation} (${v.citation}): $${v.dollarAmount.toFixed(2)}`)
-      .join('\n')
-
-    const shiftLog = params.shifts
-      .map(s => `  ${s.date}: ${s.clockIn}-${s.clockOut}, break ${s.breakMinutes}min, tips $${Number(s.tips || 0).toFixed(2)}${s.flaggedOT ? ' [OT flagged]' : ''}`)
-      .join('\n')
-
-    const prompt = `You are a legal document assistant. Generate a concise evidence summary report that a worker can bring to an employment attorney consultation.
-
-Case details:
-- Worker: ${params.workerName || '[WORKER NAME]'}
-- Employer: ${params.employerName || '[EMPLOYER NAME]'}
-- Pay period: ${params.payPeriod || '[PAY PERIOD]'}
-- State: ${params.stateName} (${params.stateCode})
-- Total estimated wages owed: $${params.totalOwed.toFixed(2)}
-
-Violations detected:
-${violationList}
-
-Shift log (worker-reported):
-${shiftLog}
-
-Pay stub data:
-- Hours paid: ${params.paystub.hours_paid}, OT hours paid: ${params.paystub.overtime_hours_paid}
-- Hourly rate: $${params.paystub.hourly_rate}, OT rate: $${params.paystub.overtime_rate}
-- Gross pay: $${params.paystub.gross_pay}, Net pay: $${params.paystub.net_pay}
-
-Requirements:
-- Organize into sections: Case Summary, Violations Detected (with statutes and amounts), Worker Shift Log, Pay Stub Summary, Recommended Legal Actions.
-- Present facts clearly and concisely. An attorney should be able to assess the case in under 2 minutes.
-- Include the total amount in controversy and applicable statutes.
-- Note FLSA fee-shifting (employer pays attorney fees for prevailing plaintiffs).
-- Note the statute of limitations: 2 years for FLSA (3 years if willful), and relevant state deadlines.
-- Add a header: "EVIDENCE SUMMARY, Prepared by ShiftGuard (educational tool, not legal advice)"
-- Generated on: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-- Do NOT use em dashes.
-- Return plain text only, no markdown.`
-
-    return await callClaude([{ role: 'user', content: prompt }], { maxTokens: 2000 })
-  } catch {
-    return buildEvidenceSummary(params)
-  }
-}
+/* -------------------------------------------------------------------------- */
+/*  Legacy document generators (kept as deterministic-only stubs for templates) */
+/* -------------------------------------------------------------------------- */
+/*  Legacy-doc helpers removed by design. ShiftGuard never generates demand     */
+/*  letters, complaint forms, attorney referrals, or anything else that looks   */
+/*  like legal advice. The HR email composer (`src/lib/hrEmail.js`) handles     */
+/*  the single supported long-form output: a respectful inquiry email.          */
+/* -------------------------------------------------------------------------- */

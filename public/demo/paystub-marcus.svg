@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 520" font-family="'Courier New', Courier, monospace" font-size="12">
+  <rect width="680" height="520" fill="#ffffff"/>
+  <rect x="0" y="0" width="680" height="60" fill="#232f3e"/>
+  <text x="24" y="28" fill="#ffffff" font-size="18" font-weight="bold">NORTHSTAR FULFILLMENT LLC</text>
+  <text x="24" y="46" fill="#ff9900" font-size="11">2400 Logistics Pkwy, Dallas, TX 75212 | (214) 555-0188 | EIN: 75-2188044</text>
+  <text x="656" y="28" fill="#ffffff" font-size="11" text-anchor="end">PAY STATEMENT</text>
+  <text x="656" y="46" fill="#ff9900" font-size="10" text-anchor="end">Retain for tax purposes</text>
+
+  <text x="24" y="84" fill="#333" font-size="11" font-weight="bold">EMPLOYEE</text>
+  <text x="24" y="100" fill="#333" font-size="11">Marcus L. Holloway</text>
+  <text x="24" y="114" fill="#333" font-size="11">SSN: XXX-XX-2831</text>
+  <text x="24" y="128" fill="#333" font-size="11">Assoc #: A1-448572</text>
+
+  <text x="340" y="84" fill="#333" font-size="11" font-weight="bold">PAY INFORMATION</text>
+  <text x="340" y="100" fill="#333" font-size="11">Period: 04/05/2026 to 04/11/2026</text>
+  <text x="340" y="114" fill="#333" font-size="11">Pay Date: 04/17/2026</text>
+  <text x="340" y="128" fill="#333" font-size="11">Check #: 220418</text>
+  <text x="540" y="100" fill="#333" font-size="11">Dept: Inbound</text>
+  <text x="540" y="114" fill="#333" font-size="11">Class: T1 Associate</text>
+
+  <line x1="24" y1="148" x2="656" y2="148" stroke="#cccccc"/>
+
+  <text x="24" y="170" fill="#333" font-size="11" font-weight="bold">EARNINGS</text>
+  <text x="24" y="186" fill="#555" font-size="10">Description</text>
+  <text x="320" y="186" fill="#555" font-size="10" text-anchor="end">Rate</text>
+  <text x="420" y="186" fill="#555" font-size="10" text-anchor="end">Hours</text>
+  <text x="540" y="186" fill="#555" font-size="10" text-anchor="end">Current</text>
+  <text x="656" y="186" fill="#555" font-size="10" text-anchor="end">YTD</text>
+
+  <text x="24" y="204" fill="#333">Regular</text>
+  <text x="320" y="204" fill="#333" text-anchor="end">$19.00</text>
+  <text x="420" y="204" fill="#333" text-anchor="end">40.00</text>
+  <text x="540" y="204" fill="#333" text-anchor="end">$760.00</text>
+  <text x="656" y="204" fill="#333" text-anchor="end">$11,552.00</text>
+
+  <text x="24" y="220" fill="#333">Overtime (1.5x)</text>
+  <text x="320" y="220" fill="#333" text-anchor="end">$28.50</text>
+  <text x="420" y="220" fill="#333" text-anchor="end">8.00</text>
+  <text x="540" y="220" fill="#333" text-anchor="end">$228.00</text>
+  <text x="656" y="220" fill="#333" text-anchor="end">$1,368.00</text>
+
+  <line x1="24" y1="236" x2="656" y2="236" stroke="#eeeeee"/>
+
+  <text x="24" y="254" fill="#333" font-weight="bold">Gross Pay</text>
+  <text x="540" y="254" fill="#333" font-weight="bold" text-anchor="end">$988.00</text>
+
+  <text x="24" y="288" fill="#333" font-size="11" font-weight="bold">DEDUCTIONS</text>
+  <text x="24" y="306" fill="#333">Federal Income Tax</text>
+  <text x="540" y="306" fill="#333" text-anchor="end">$98.80</text>
+  <text x="24" y="322" fill="#333">Social Security (6.2%)</text>
+  <text x="540" y="322" fill="#333" text-anchor="end">$61.26</text>
+  <text x="24" y="338" fill="#333">Medicare (1.45%)</text>
+  <text x="540" y="338" fill="#333" text-anchor="end">$14.33</text>
+  <text x="24" y="354" fill="#333">Medical Premium</text>
+  <text x="540" y="354" fill="#333" text-anchor="end">$42.00</text>
+
+  <line x1="24" y1="370" x2="656" y2="370" stroke="#eeeeee"/>
+  <text x="24" y="390" fill="#333" font-weight="bold">Net Pay</text>
+  <text x="540" y="390" fill="#232f3e" font-weight="bold" text-anchor="end">$771.61</text>
+
+  <rect x="24" y="410" width="632" height="36" fill="#fff3e0" stroke="#ffcc99"/>
+  <text x="36" y="430" fill="#7a4a00" font-size="11" font-weight="bold">Note:</text>
+  <text x="84" y="430" fill="#7a4a00" font-size="11">Night differential $1.00/hr applies to shifts 22:00 to 06:00. Questions: payroll@northstar-fc.com.</text>
+
+  <text x="24" y="476" fill="#666" font-size="10">Northstar Fulfillment LLC | 2400 Logistics Pkwy, Dallas, TX 75212</text>
+  <text x="24" y="492" fill="#666" font-size="10">This is an informational pay stub. Retain for your records.</text>
+</svg>

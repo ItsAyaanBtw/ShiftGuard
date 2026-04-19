@@ -1,34 +1,71 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useReducer } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   AlertTriangle, CheckCircle2, ArrowRight, ArrowLeft, Clock,
-  DollarSign, Scale, FileText, ExternalLink, ShieldAlert,
-  TrendingDown, Gavel, AlertCircle, Info
+  DollarSign, Scale, ShieldAlert, ShieldCheck, Mail, Wrench,
+  TrendingDown, AlertCircle, Info
 } from 'lucide-react'
 import Header from '../components/Header'
 import Disclaimer from '../components/Disclaimer'
-import AntiRetaliationInfo from '../components/AntiRetaliationInfo'
-import { getShifts, getPaystub, getUserState, getUserCity, saveViolations } from '../lib/storage'
+import CaseIntelligence from '../components/CaseIntelligence'
+import {
+  getShifts,
+  getPaystub,
+  getUserState,
+  getUserCity,
+  saveViolations,
+  getUserPreferences,
+  getVerificationRunCountThisMonth,
+  isProPlan,
+  getTimesheetRecord,
+  FREE_MONTHLY_CHECK_LIMIT,
+  getAnomalies,
+  dismissAnomaly,
+} from '../lib/storage'
 import { analyzeWages } from '../lib/comparisonEngine'
 
-const VIOLATION_ICONS = {
+const DISCREPANCY_ICONS = {
+  overtime_shortfall: Clock,
   unpaid_overtime: Clock,
+  double_time_shortfall: Clock,
   unpaid_double_time: Clock,
+  hours_shortfall: TrendingDown,
   missing_hours: TrendingDown,
+  minimum_wage_review: DollarSign,
   minimum_wage: DollarSign,
+  meal_break_review: AlertCircle,
   meal_break_violation: AlertCircle,
+  rest_break_review: AlertCircle,
   rest_break_violation: AlertCircle,
+  gross_pay_review: AlertTriangle,
   pay_discrepancy: AlertTriangle,
+  night_differential_review: Clock,
+  weekend_premium_review: Clock,
+  holiday_premium_review: Clock,
+  charge_nurse_differential_review: Clock,
+  preceptor_differential_review: Clock,
 }
 
-const VIOLATION_LABELS = {
-  unpaid_overtime: 'Unpaid Overtime',
-  unpaid_double_time: 'Unpaid Double Time',
-  missing_hours: 'Missing Hours',
-  minimum_wage: 'Minimum Wage Violation',
-  meal_break_violation: 'Meal Break Violation',
-  rest_break_violation: 'Rest Break Violation',
-  pay_discrepancy: 'Pay Discrepancy',
+const DISCREPANCY_LABELS = {
+  overtime_shortfall: 'Overtime premium',
+  unpaid_overtime: 'Overtime premium',
+  double_time_shortfall: 'Double-time premium',
+  unpaid_double_time: 'Double-time premium',
+  hours_shortfall: 'Hours on pay advice',
+  missing_hours: 'Hours on pay advice',
+  minimum_wage_review: 'Minimum wage check',
+  minimum_wage: 'Minimum wage check',
+  meal_break_review: 'Meal break timing',
+  meal_break_violation: 'Meal break timing',
+  rest_break_review: 'Rest break timing',
+  rest_break_violation: 'Rest break timing',
+  gross_pay_review: 'Gross pay gap',
+  pay_discrepancy: 'Gross pay gap',
+  night_differential_review: 'Night / evening differential',
+  weekend_premium_review: 'Weekend premium',
+  holiday_premium_review: 'Holiday premium',
+  charge_nurse_differential_review: 'Charge nurse differential',
+  preceptor_differential_review: 'Preceptor differential',
 }
 
 const SEVERITY_STYLES = {
@@ -47,24 +84,48 @@ export default function Comparison() {
   const navigate = useNavigate()
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
-
-  const shifts = useMemo(() => getShifts(), [])
-  const paystub = useMemo(() => getPaystub(), [])
-  const stateCode = useMemo(() => getUserState(), [])
-  const city = useMemo(() => getUserCity(), [])
+  const [dataVersion, bumpDataVersion] = useReducer(n => n + 1, 0)
 
   useEffect(() => {
-    if (!shifts.length || !paystub) return
+    const onData = () => bumpDataVersion()
+    window.addEventListener('shiftguard-data-changed', onData)
+    return () => window.removeEventListener('shiftguard-data-changed', onData)
+  }, [])
 
-    try {
-      const analysis = analyzeWages({ shifts, paystub, stateCode, city })
-      setResult(analysis)
-      saveViolations(analysis)
-    } catch (err) {
-      console.error('Comparison engine error:', err)
-      setError(err.message)
-    }
-  }, [shifts, paystub, stateCode])
+  const shifts = getShifts()
+  const paystub = getPaystub()
+  const stateCode = getUserState()
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      const s = getShifts()
+      const p = getPaystub()
+      const sc = getUserState()
+      const cy = getUserCity()
+      if (!s.length || !p) {
+        setResult(null)
+        setError(null)
+        return
+      }
+      try {
+        const analysis = analyzeWages({
+          shifts: s,
+          paystub: p,
+          stateCode: sc,
+          city: cy,
+          prefs: getUserPreferences(),
+        })
+        setResult(analysis)
+        saveViolations(analysis)
+        setError(null)
+      } catch (err) {
+        console.error('Comparison engine error:', err)
+        setError(err.message)
+        setResult(null)
+      }
+    }, 0)
+    return () => window.clearTimeout(t)
+  }, [dataVersion])
 
   if (!shifts.length || !paystub) {
     return (
@@ -96,33 +157,59 @@ export default function Comparison() {
     )
   }
 
-  if (!result) return null
+  if (!result && !error) {
+    return (
+      <div className="min-h-dvh bg-slate-950 flex flex-col">
+        <Header />
+        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-3">
+          <div className="w-8 h-8 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-400 text-sm">Running paycheck comparison…</p>
+        </div>
+      </div>
+    )
+  }
 
-  const hasViolations = result.violations.length > 0
+  const hasDiscrepancies = result.discrepancies.length > 0
 
   return (
     <div className="min-h-dvh bg-slate-950 flex flex-col">
       <Header />
 
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 sm:px-6 py-6">
+      <main className="relative z-10 flex-1 max-w-3xl mx-auto w-full px-4 sm:px-6 py-6 pb-20">
+        <AnomaliesBanner />
+        <VerificationCoverageBanner shifts={shifts} />
+
+        {!isProPlan() && getVerificationRunCountThisMonth() > FREE_MONTHLY_CHECK_LIMIT && (
+          <div className="mb-5 rounded-xl border border-slate-600 bg-slate-900/90 px-4 py-3 text-sm text-slate-300">
+            <span className="text-slate-400">Free plan: </span>
+            {FREE_MONTHLY_CHECK_LIMIT} paycheck checks per month is the launch cap. This device has{' '}
+            {getVerificationRunCountThisMonth()} runs in {new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}.
+            {' '}
+            <Link to="/pricing" className="text-terracotta hover:underline font-medium">
+              Activate Pro (demo)
+            </Link>{' '}
+            turns on unlimited runs here for your pitch and testing.
+          </div>
+        )}
+
         {/* Status banner */}
-        {hasViolations ? (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-5 mb-6">
+        {hasDiscrepancies ? (
+          <div className="bg-amber-500/10 border border-amber-500/25 rounded-2xl p-5 mb-6">
             <div className="flex items-start gap-4">
-              <ShieldAlert className="w-8 h-8 text-red-400 shrink-0 mt-0.5" />
+              <ShieldAlert className="w-8 h-8 text-amber-400 shrink-0 mt-0.5" />
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">
-                  Potential violations detected
+                  Paycheck discrepancies to review
                 </h1>
                 <p className="text-slate-400 text-sm">
-                  We found {result.violations.length} discrepanc{result.violations.length === 1 ? 'y' : 'ies'} between
-                  your logged shifts and your pay stub under {result.state.name} labor law.
+                  We found {result.discrepancies.length} line item{result.discrepancies.length === 1 ? '' : 's'} comparing
+                  your shift log to your pay advice using common {result.state.name} and federal pay rules.
                 </p>
                 <div className="mt-4 flex items-baseline gap-2">
-                  <span className="text-3xl sm:text-4xl font-bold text-red-400">
-                    ${result.totalOwed.toFixed(2)}
+                  <span className="text-3xl sm:text-4xl font-bold text-amber-400">
+                    ${result.totalDifference.toFixed(2)}
                   </span>
-                  <span className="text-slate-400 text-sm">estimated amount owed</span>
+                  <span className="text-slate-400 text-sm">combined dollars flagged (estimate)</span>
                 </div>
               </div>
             </div>
@@ -133,11 +220,11 @@ export default function Comparison() {
               <CheckCircle2 className="w-8 h-8 text-green-400 shrink-0 mt-0.5" />
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">
-                  No violations detected
+                  No discrepancies flagged
                 </h1>
                 <p className="text-slate-400 text-sm">
-                  Your pay stub appears to match your logged shifts under {result.state.name} labor law.
-                  This is a good sign, but review the details below to confirm.
+                  Your pay advice lines up with your logged hours under the checks we run for {result.state.name}.
+                  Still verify rates, differentials, and pay-period dates against your employer’s policy.
                 </p>
               </div>
             </div>
@@ -145,22 +232,30 @@ export default function Comparison() {
         )}
 
         {/* Side-by-side comparison */}
-        <SideBySide summary={result.summary} paystub={paystub} stateCode={stateCode} />
+        <SideBySide summary={result.summary} paystub={paystub} />
 
-        {/* Violations */}
-        {hasViolations && (
+        {/* Discrepancies */}
+        {hasDiscrepancies && (
           <div className="mt-6">
             <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
               <Scale className="w-5 h-5 text-terracotta" />
-              Violations
+              What we noticed
             </h2>
             <div className="space-y-3">
-              {result.violations.map((v, i) => (
-                <ViolationCard key={i} violation={v} />
+              {result.discrepancies.map((v, i) => (
+                <DiscrepancyCard key={i} item={v} />
               ))}
             </div>
           </div>
         )}
+
+        <CaseIntelligence
+          shifts={shifts}
+          paystub={paystub}
+          violations={result.discrepancies}
+          stateCode={stateCode}
+          totalOwed={result.totalDifference}
+        />
 
         {/* Daily breakdown */}
         {result.summary.dailyBreakdown?.length > 0 && (
@@ -213,13 +308,6 @@ export default function Comparison() {
           </div>
         )}
 
-        {/* Recommended action */}
-        {hasViolations && (
-          <div className="mt-6">
-            <RecommendedAction action={result.recommendedAction} agency={result.state.agency} />
-          </div>
-        )}
-
         {/* Salaried-exempt warning */}
         {paystub.hourly_rate >= 21.10 && (
           <div className="mt-6 flex items-start gap-2 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
@@ -227,38 +315,66 @@ export default function Comparison() {
             <p className="text-xs text-amber-400 leading-relaxed">
               Your hourly rate of ${paystub.hourly_rate.toFixed(2)} is above the FLSA salary threshold
               for overtime exemption ($844/week). If you are classified as a salaried-exempt employee,
-              overtime rules may not apply to your position. Consult an attorney to determine your
-              classification status.
+              overtime rules may not apply to your position. Confirm your classification with payroll if hours look wrong.
             </p>
           </div>
         )}
 
-        {/* Anti-retaliation info */}
-        {hasViolations && (
-          <div className="mt-6">
-            <AntiRetaliationInfo stateCode={stateCode} />
-          </div>
-        )}
-
         {/* Action buttons */}
-        <div className="mt-6 flex flex-col sm:flex-row gap-3">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
           <button
             onClick={() => navigate('/upload')}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors text-sm font-medium cursor-pointer"
+            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors text-sm font-medium cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             Re-upload pay stub
           </button>
-          {hasViolations && (
-            <button
-              onClick={() => navigate('/action')}
-              className="flex-1 flex items-center justify-center gap-2 py-3 bg-terracotta hover:bg-terracotta-dark text-white font-semibold rounded-xl transition-colors cursor-pointer"
-            >
-              Take action
-              <ArrowRight className="w-5 h-5" />
-            </button>
-          )}
+          <button
+            onClick={() => navigate('/tools')}
+            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-terracotta/40 text-terracotta hover:bg-terracotta/10 transition-colors text-sm font-medium cursor-pointer"
+          >
+            <Mail className="w-4 h-4" />
+            Draft inquiry email
+          </button>
+          <button
+            onClick={() => navigate('/report')}
+            className="flex items-center justify-center gap-2 py-3 bg-terracotta hover:bg-terracotta-dark text-white font-semibold rounded-xl transition-colors cursor-pointer"
+          >
+            Open the report
+            <ArrowRight className="w-5 h-5" />
+          </button>
         </div>
+
+        {/* Upsell: only if discrepancies found and user is Free */}
+        {hasDiscrepancies && !isProPlan() && (
+          <div className="mt-5 rounded-2xl border border-slate-700 bg-slate-900/60 p-4 flex items-start gap-3">
+            <Wrench className="w-4 h-4 text-terracotta mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-white font-medium">Take the next step</p>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                Pro at $6.99/month (or $59/year) opens the inquiry email composer, PTO value,
+                volatility score, travel-nurse X-ray, retro pay estimate, and the full CA/NY rule pack.
+                Affected workers lose about $3,300/year to pay errors on average, so Pro pays for itself
+                on the first catch.
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <Link
+                  to="/pricing"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-terracotta hover:text-terracotta-light"
+                >
+                  See plans
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+                <Link
+                  to="/tools"
+                  className="inline-flex items-center gap-1 text-xs text-slate-300 hover:text-white"
+                >
+                  Try free tools
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mt-6 p-4 bg-slate-900 border border-slate-800 rounded-xl">
           <div className="flex items-start gap-2">
@@ -279,9 +395,101 @@ export default function Comparison() {
   )
 }
 
+/* ---------- Continuous wage-check alerts ---------- */
+
+function AnomaliesBanner() {
+  const active = getAnomalies().filter(a => !a.dismissed).slice(0, 3)
+  if (!active.length) return null
+
+  const severityTone = (s) =>
+    s === 'alert' ? 'border-red-500/30 bg-red-500/5 text-red-200' :
+    s === 'warn'  ? 'border-amber-500/30 bg-amber-500/5 text-amber-100' :
+                    'border-slate-700 bg-slate-900/60 text-slate-200'
+
+  return (
+    <div className="mb-5 space-y-2">
+      {active.map(a => (
+        <div
+          key={a.id}
+          className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${severityTone(a.severity)}`}
+        >
+          <ShieldAlert className={`w-5 h-5 shrink-0 mt-0.5 ${a.severity === 'alert' ? 'text-red-400' : 'text-amber-300'}`} />
+          <div className="flex-1 min-w-0 text-sm">
+            <p className="font-medium text-white">{a.title}</p>
+            <p className="text-xs opacity-90 mt-1 leading-relaxed">{a.detail}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => { dismissAnomaly(a.id); window.dispatchEvent(new Event('shiftguard-data-changed')) }}
+            className="text-[11px] text-slate-300 hover:text-white px-2 py-0.5 rounded border border-slate-700 hover:border-slate-600 shrink-0"
+          >
+            Dismiss
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* ---------- Verification coverage banner ---------- */
+
+function VerificationCoverageBanner({ shifts }) {
+  const ts = getTimesheetRecord()
+  const hasTimesheet = !!(ts && Array.isArray(ts.entries) && ts.entries.length)
+  const verified = shifts.filter(s => s?.verification?.status === 'verified').length
+  const mismatch = shifts.filter(s => s?.verification?.status === 'mismatch').length
+  const pct = shifts.length ? Math.round((verified / shifts.length) * 100) : 0
+
+  if (!hasTimesheet) {
+    return (
+      <div className="mb-5 rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 flex items-start gap-3">
+        <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-white font-medium">These results use self-reported hours</p>
+          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+            Upload a Kronos, UKG, Workday, ADP, or similar time record so each shift is matched
+            to an employer-issued entry before the paycheck comparison runs.
+          </p>
+          <Link
+            to="/verify"
+            className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-terracotta hover:text-terracotta-light"
+          >
+            Verify hours
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  const allClean = mismatch === 0 && verified === shifts.length
+  const tone = allClean
+    ? 'border-green-500/30 bg-green-500/10 text-green-200'
+    : 'border-amber-500/30 bg-amber-500/10 text-amber-200'
+  const Icon = allClean ? ShieldCheck : ShieldAlert
+
+  return (
+    <div className={`mb-5 rounded-xl border px-4 py-3 flex items-start gap-3 ${tone}`}>
+      <Icon className="w-5 h-5 shrink-0 mt-0.5" />
+      <div className="flex-1 min-w-0 text-sm">
+        <p className="font-medium text-white">
+          {verified} of {shifts.length} shifts verified
+          {pct > 0 && <span className="text-slate-400 font-normal"> · {pct}% coverage</span>}
+          {mismatch > 0 && <span className="text-amber-300 font-normal"> · {mismatch} off by a bit</span>}
+        </p>
+        <p className="text-xs opacity-90 mt-1 leading-relaxed">
+          Source: {ts.source_label || 'Employer time record'}
+          {ts.period_start && ts.period_end && <> · {ts.period_start} to {ts.period_end}</>}.
+          {' '}<Link to="/verify" className="underline underline-offset-2 hover:opacity-80">Open</Link>
+        </p>
+      </div>
+    </div>
+  )
+}
+
 /* ---------- Side-by-Side ---------- */
 
-function SideBySide({ summary, paystub, stateCode }) {
+function SideBySide({ summary, paystub }) {
   const rows = [
     {
       label: 'Total hours',
@@ -319,14 +527,24 @@ function SideBySide({ summary, paystub, stateCode }) {
       paid: `$${paystub.hourly_rate.toFixed(2)}`,
       mismatch: false,
     },
-    {
-      label: 'Expected gross pay',
-      worked: `$${summary.expectedGross.toFixed(2)}`,
-      paid: `$${summary.actualGross.toFixed(2)}`,
-      mismatch: Math.abs(summary.discrepancy) > 1,
-      isBold: true,
-    },
   )
+
+  if (summary.healthcarePremiums > 0.01) {
+    rows.push({
+      label: 'Healthcare premiums (your entries)',
+      worked: `+$${summary.healthcarePremiums.toFixed(2)}`,
+      paid: 'not shown',
+      mismatch: false,
+    })
+  }
+
+  rows.push({
+    label: 'Expected gross pay',
+    worked: `$${summary.expectedGross.toFixed(2)}`,
+    paid: `$${summary.actualGross.toFixed(2)}`,
+    mismatch: Math.abs(summary.discrepancy) > 1,
+    isBold: true,
+  })
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
@@ -377,13 +595,14 @@ function SideBySide({ summary, paystub, stateCode }) {
   )
 }
 
-/* ---------- Violation Card ---------- */
+/* ---------- Discrepancy Card ---------- */
 
-function ViolationCard({ violation }) {
-  const Icon = VIOLATION_ICONS[violation.type] || AlertTriangle
-  const label = VIOLATION_LABELS[violation.type] || violation.type
-  const style = SEVERITY_STYLES[violation.severity] || SEVERITY_STYLES.medium
-  const dot = SEVERITY_DOT[violation.severity] || SEVERITY_DOT.medium
+function DiscrepancyCard({ item }) {
+  const Icon = DISCREPANCY_ICONS[item.type] || AlertTriangle
+  const label = DISCREPANCY_LABELS[item.type] || item.type.replace(/_/g, ' ')
+  const style = SEVERITY_STYLES[item.severity] || SEVERITY_STYLES.medium
+  const dot = SEVERITY_DOT[item.severity] || SEVERITY_DOT.medium
+  const amt = Number(item.difference ?? item.dollarAmount ?? 0)
 
   return (
     <div className={`border rounded-xl p-4 ${style}`}>
@@ -392,68 +611,24 @@ function ViolationCard({ violation }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-white text-sm">{label}</h3>
+              <h3 className="font-semibold text-white text-sm capitalize">{label}</h3>
               <span className={`w-2 h-2 rounded-full ${dot}`} />
             </div>
             <span className="text-base font-bold text-white shrink-0">
-              ${violation.dollarAmount.toFixed(2)}
+              ${amt.toFixed(2)}
             </span>
           </div>
-          <p className="text-sm leading-relaxed opacity-90">{violation.explanation}</p>
-          <p className="text-xs mt-2 opacity-70 font-medium">
-            <Gavel className="w-3 h-3 inline-block mr-1 -mt-0.5" />
-            {violation.citation}
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ---------- Recommended Action ---------- */
-
-function RecommendedAction({ action, agency }) {
-  const configs = {
-    demand_letter: {
-      title: 'Send a demand letter',
-      desc: 'For smaller discrepancies, a formal demand letter to your employer is often the fastest path to resolution.',
-      icon: FileText,
-    },
-    state_complaint: {
-      title: `File a complaint with ${agency.name}`,
-      desc: 'The amount owed is significant enough to warrant a formal state complaint.',
-      icon: Scale,
-    },
-    attorney_referral: {
-      title: 'Consult an employment attorney',
-      desc: 'The violations detected are substantial. An attorney can help you recover the full amount owed, and under the FLSA, the employer typically pays attorney fees.',
-      icon: Gavel,
-    },
-  }
-
-  const config = configs[action]
-  if (!config) return null
-  const Icon = config.icon
-
-  return (
-    <div className="bg-terracotta/10 border border-terracotta/20 rounded-xl p-4">
-      <div className="flex items-start gap-3">
-        <Icon className="w-5 h-5 text-terracotta shrink-0 mt-0.5" />
-        <div>
-          <h3 className="font-semibold text-white text-sm mb-1">
-            Recommended: {config.title}
-          </h3>
-          <p className="text-sm text-slate-400 leading-relaxed">{config.desc}</p>
-          {agency.url && (
-            <a
-              href={agency.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-terracotta hover:text-terracotta-light mt-2 font-medium"
-            >
-              {agency.name}
-              <ExternalLink className="w-3 h-3" />
-            </a>
+          <p className="text-sm leading-relaxed opacity-90">{item.explanation}</p>
+          {item.suggestedAction && (
+            <p className="text-xs mt-2 text-slate-300/90 leading-relaxed">
+              <span className="font-medium text-slate-400">Next step: </span>
+              {item.suggestedAction}
+            </p>
+          )}
+          {item.lawNote && (
+            <p className="text-[11px] mt-2 opacity-70">
+              Reference: {item.lawNote}
+            </p>
           )}
         </div>
       </div>

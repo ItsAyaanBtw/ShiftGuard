@@ -13,6 +13,7 @@ dist/
 .vscode/*
 !.vscode/settings.json
 .idea/
+.cursor/
 *.swp
 *.swo
 .DS_Store
