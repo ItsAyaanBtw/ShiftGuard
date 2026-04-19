@@ -54,14 +54,15 @@ export default function Dashboard() {
       <Header />
 
       <main className="relative z-10 flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-6 pb-24">
+        <OrganizerBanner prefs={prefs} />
+
         <OverviewSection prefs={prefs} />
 
         <TimeframeTotals />
 
-        <DiscrepancyBanner analysis={analysis} />
+        <DiscrepancyBanner analysis={analysis} prefs={prefs} />
 
-
-        <PayPictureGrid />
+        <PayPictureGrid prefs={prefs} />
 
         <InsightsStrip prefs={prefs} stateCode={stateCode} />
 
@@ -612,15 +613,81 @@ function ProjectedCard({ label, value }) {
   )
 }
 
-function DiscrepancyBanner({ analysis }) {
+/**
+ * OrganizerBanner — only shown when the current account is flagged as organizer mode
+ * (B2B demo). Presents cohort-level framing at the top of the Dashboard so the demo
+ * immediately reads as "you are the organizer, this is one member's case". Nothing
+ * about this changes the underlying single-worker data model — it's a framing layer.
+ */
+function OrganizerBanner({ prefs }) {
+  if (!prefs?.organizerMode) return null
+  const orgName = prefs.organizerOrgName || 'Your organization'
+  const orgType = prefs.organizerOrgType || 'Worker center'
+  const city = prefs.organizerCity || ''
+  const members = Number(prefs.organizerMemberCount) || 0
+  const flagged = Number(prefs.organizerFlaggedStubs) || 0
+  const topEmployer = prefs.organizerTopEmployer || ''
+  const pattern = prefs.organizerPatternSummary || ''
+
+  return (
+    <section className="mb-6 rounded-2xl border border-terracotta/40 bg-gradient-to-br from-terracotta/10 via-slate-900 to-slate-900 p-5 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold text-terracotta uppercase tracking-[0.18em]">Organizer view · {orgType}</p>
+          <h2 className="mt-1 text-lg sm:text-xl font-semibold text-white">{orgName}{city ? ` · ${city}` : ''}</h2>
+          <p className="mt-1 text-sm text-slate-400 leading-relaxed max-w-2xl">
+            {pattern || `Across your members, ShiftGuard flags paystubs against federal, state, and contract rules.`}
+          </p>
+        </div>
+        <Link
+          to="/pricing"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-terracotta hover:bg-terracotta-dark text-slate-950 text-sm font-semibold min-h-[40px] transition-colors shrink-0"
+        >
+          Request org pricing
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <OrgStat label="Members enrolled" value={String(members)} />
+        <OrgStat label="Paystubs flagged" value={String(flagged)} tone="alert" />
+        <OrgStat label="Top employer" value={topEmployer || '—'} compact />
+        <OrgStat label="Coverage" value={city ? city : 'Multi-site'} compact />
+      </div>
+
+      <p className="mt-4 text-[11px] text-slate-500 leading-relaxed">
+        This demo shows one member&rsquo;s case so you can see what the worker view looks like.
+        The production org tier ships a cohort dashboard, CSV export for legal review, and SSO for your staff.
+      </p>
+    </section>
+  )
+}
+
+function OrgStat({ label, value, tone, compact }) {
+  const color = tone === 'alert' ? 'text-amber-200' : 'text-white'
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+      <p className="text-[10px] font-medium text-slate-500 uppercase tracking-[0.14em]">{label}</p>
+      <p className={`mt-1 ${compact ? 'text-sm font-medium' : 'text-xl font-bold'} ${color} truncate`}>{value}</p>
+    </div>
+  )
+}
+
+function DiscrepancyBanner({ analysis, prefs }) {
   const paystub = getPaystub()
   const employer = paystub?.employer_name
   const owed = Number(analysis?.totalOwed) || 0
 
   // Only surface this banner when the comparison engine actually found something. Avoids
-  // showing stale cross-industry placeholder text (like "Target schedule shows 32 hours")
-  // after a healthcare demo has been loaded.
+  // showing stale cross-industry placeholder text after a scenario is loaded.
   if (owed <= 0 || !employer) return null
+
+  // In organizer mode reframe the discrepancy as a member case, not "your paycheck".
+  const organizerMode = !!prefs?.organizerMode
+  const memberLabel = organizerMode ? 'Luz Herrera · Starlight Home Care' : `last ${employer} paystub`
+  const body = organizerMode
+    ? `Member case ${memberLabel} is short about $${owed.toFixed(0)} this period. Open the comparison to see which CBA line isn\u2019t showing on the stub.`
+    : `Your last ${employer} paystub looks about $${owed.toFixed(0)} short of what your logged hours support. Review the line-by-line comparison.`
 
   return (
     <div className="mb-6 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 sm:p-5 flex items-start gap-3">
@@ -628,11 +695,10 @@ function DiscrepancyBanner({ analysis }) {
         <AlertTriangle className="w-4 h-4" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-amber-100">Possible discrepancy detected</p>
-        <p className="text-sm text-amber-100/80 mt-1 leading-relaxed">
-          Your last {employer} paystub looks about ${owed.toFixed(0)} short of what your logged hours support.
-          Review the line-by-line comparison.
+        <p className="text-sm font-semibold text-amber-100">
+          {organizerMode ? 'Member case flagged' : 'Possible discrepancy detected'}
         </p>
+        <p className="text-sm text-amber-100/80 mt-1 leading-relaxed">{body}</p>
       </div>
       <Link
         to="/compare"
@@ -645,12 +711,13 @@ function DiscrepancyBanner({ analysis }) {
   )
 }
 
-function PayPictureGrid() {
+function PayPictureGrid({ prefs }) {
   const paystub = getPaystub()
   const vault = getPaystubVault()
   const recentStubs = [paystub, ...vault.map(v => v?.paystub).filter(Boolean)]
     .filter(Boolean)
     .slice(0, 3)
+  const organizerMode = !!prefs?.organizerMode
 
   // Pull upcoming shifts from the user's actual logged data. If nothing is scheduled
   // in the next 14 days, we show the most recent shifts instead so the card is never
@@ -701,7 +768,9 @@ function PayPictureGrid() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Receipt className="w-4 h-4 text-terracotta" />
-            <h3 className="text-sm font-semibold text-white">Recent paystubs</h3>
+            <h3 className="text-sm font-semibold text-white">
+              {organizerMode ? 'Member paystubs' : 'Recent paystubs'}
+            </h3>
           </div>
           <Link to="/vault" className="text-xs font-medium text-terracotta hover:text-terracotta-light">
             View all
@@ -749,7 +818,9 @@ function PayPictureGrid() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <CalendarClock className="w-4 h-4 text-terracotta" />
-            <h3 className="text-sm font-semibold text-white">Upcoming shifts</h3>
+            <h3 className="text-sm font-semibold text-white">
+              {organizerMode ? 'Member upcoming shifts' : 'Upcoming shifts'}
+            </h3>
           </div>
           <Link to="/log" className="text-xs font-medium text-terracotta hover:text-terracotta-light">
             Manage

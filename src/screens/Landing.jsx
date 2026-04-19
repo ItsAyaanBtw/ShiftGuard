@@ -67,7 +67,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-md px-3 sm:px-5 py-2.5">
           <Link to="/" className="flex items-center gap-2 min-w-0 px-2 py-1.5 -ml-2 rounded-lg hover:bg-slate-800/60 transition-colors">
             <BrandMark size={28} />
-            <Wordmark height={22} className="hidden sm:block" />
+            <Wordmark size={20} className="hidden sm:inline-flex" />
             <span className="sm:hidden text-base font-semibold text-white tracking-tight truncate">ShiftGuard</span>
           </Link>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -765,28 +765,40 @@ function DemoPickerModal({ onPick, onClose }) {
         </p>
 
         <div className="space-y-3">
-          {DEMO_SCENARIOS.map(s => (
-            <button
-              type="button"
-              key={s.id}
-              onClick={() => onPick(s.id)}
-              className="w-full text-left bg-slate-800/80 border border-slate-700 hover:border-terracotta/50 rounded-xl p-4 transition-colors cursor-pointer group min-h-[48px]"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-white font-semibold text-sm">{s.name}</span>
-                    <span className="text-xs text-slate-600">·</span>
-                    <span className="text-xs text-slate-500">{s.industry}</span>
+          {DEMO_SCENARIOS.map(s => {
+            const isB2B = s.audience === 'b2b'
+            return (
+              <button
+                type="button"
+                key={s.id}
+                onClick={() => onPick(s.id)}
+                className={`w-full text-left rounded-xl p-4 transition-colors cursor-pointer group min-h-[48px] border ${
+                  isB2B
+                    ? 'bg-terracotta/10 border-terracotta/40 hover:border-terracotta'
+                    : 'bg-slate-800/80 border-slate-700 hover:border-terracotta/50'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="text-white font-semibold text-sm">{s.name}</span>
+                      <span className="text-xs text-slate-600">·</span>
+                      <span className="text-xs text-slate-500">{s.industry}</span>
+                      {isB2B && (
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-terracotta border border-terracotta/40 bg-terracotta/10 rounded-full px-2 py-0.5">
+                          For orgs
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-400">{s.role}</p>
+                    <p className="text-xs text-slate-500 mt-1.5">{s.summary}</p>
+                    <p className="text-xs font-medium text-amber-400/90 mt-1">{s.tagline}</p>
                   </div>
-                  <p className="text-sm text-slate-400">{s.role}</p>
-                  <p className="text-xs text-slate-500 mt-1.5">{s.summary}</p>
-                  <p className="text-xs font-medium text-amber-400/90 mt-1">{s.tagline}</p>
+                  <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-terracotta group-hover:translate-x-0.5 shrink-0 mt-1 transition-all" />
                 </div>
-                <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-terracotta group-hover:translate-x-0.5 shrink-0 mt-1 transition-all" />
-              </div>
-            </button>
-          ))}
+              </button>
+            )
+          })}
         </div>
 
         <p className="text-xs text-slate-600 mt-4 text-center">

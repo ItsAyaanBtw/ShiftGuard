@@ -82,7 +82,7 @@ export default function Header() {
             className="flex items-center gap-2 shrink-0 min-h-[44px] min-w-[44px] py-2 -ml-2 pl-2 pr-3 rounded-lg hover:bg-slate-800/60 transition-colors"
           >
             <BrandMark size={28} />
-            <Wordmark height={22} className="hidden sm:block" />
+            <Wordmark size={20} className="hidden sm:inline-flex" />
             <span className="sm:hidden text-lg font-semibold text-white tracking-tight whitespace-nowrap">ShiftGuard</span>
           </Link>
 

@@ -216,10 +216,73 @@ export default function Pricing() {
           test the gated tools and comparison flows. Deep Audit remains marked coming soon.
         </p>
 
+        <OrgPlanCard />
+
         <div className="mt-12 max-w-xl mx-auto">
           <Disclaimer />
         </div>
       </main>
+    </div>
+  )
+}
+
+/**
+ * OrgPlanCard — the B2B pitch for labor unions and worker centers. Sits underneath
+ * the individual tiers because the sales motion is different: seat-based, org-wide,
+ * with a contact step rather than self-serve checkout. Copy deliberately stays
+ * inside the union / worker-center space and doesn't talk to individual workers here.
+ */
+function OrgPlanCard() {
+  const mailBody = encodeURIComponent(
+    'Hi, I work with [org name] and would like to learn about the ShiftGuard org plan.\n\nRough member count:\nTop employers we cover:\nWhat we want to prove out first:\n',
+  )
+  return (
+    <ScrollReveal className="mt-14 max-w-5xl mx-auto">
+      <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-terracotta/10 via-slate-900 to-slate-900 p-6 sm:p-8">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 max-w-2xl">
+            <p className="text-[10px] font-semibold text-terracotta uppercase tracking-[0.18em]">
+              For labor unions and worker centers
+            </p>
+            <h3 className="mt-2 text-2xl sm:text-3xl font-semibold text-white tracking-tight">
+              Give every member a pay-check audit.
+            </h3>
+            <p className="mt-3 text-slate-400 leading-relaxed">
+              One dashboard for your organizers, one account per member. Paystubs and
+              timesheets stay on each member&rsquo;s device unless they share them with
+              your staff. Run CBA rules alongside federal and state rules, so a missed
+              travel-time line or a 7th-day premium shows up as a flagged case instead of
+              a complaint that arrives six months late.
+            </p>
+          </div>
+          <a
+            href={`mailto:orgs@shiftguard.app?subject=ShiftGuard%20org%20plan&body=${mailBody}`}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-terracotta hover:bg-terracotta-dark text-slate-950 text-sm font-semibold min-h-[40px] transition-colors shrink-0"
+          >
+            Request a walkthrough
+            <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <OrgFeature title="Seat-based pricing" body="Flat monthly rate per member seat. Unlimited organizer seats for your staff." />
+          <OrgFeature title="Contract-aware rules" body="Upload your CBA and ShiftGuard will check the stub against contract premiums, not just federal and state." />
+          <OrgFeature title="Exports for legal" body="CSV of flagged paystubs with citations. Handoff to a rep counsel is one download." />
+        </div>
+
+        <p className="mt-5 text-[11px] text-slate-500 leading-relaxed">
+          Not sold to employers. We only work with worker-side organizations. Pilot pricing available for locals under 5,000 members and for worker centers.
+        </p>
+      </div>
+    </ScrollReveal>
+  )
+}
+
+function OrgFeature({ title, body }) {
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+      <p className="text-sm font-semibold text-white">{title}</p>
+      <p className="mt-1 text-xs text-slate-400 leading-relaxed">{body}</p>
     </div>
   )
 }

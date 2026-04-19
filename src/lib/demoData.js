@@ -216,6 +216,82 @@ export const DEMO_SCENARIOS = [
       filingStatus: 'single',
     },
   },
+  {
+    id: 'organizer',
+    name: 'Tomás, 41',
+    role: 'Organizer at SEIU Local 199 · Houston worker center',
+    industry: 'Labor union · Worker center',
+    industryKey: 'union',
+    stubImage: '/demo/paystub-union-member.svg',
+    audience: 'b2b',
+    organizer: {
+      orgName: 'SEIU Local 199',
+      orgType: 'Labor union',
+      city: 'Houston, TX',
+      memberCount: 47,
+      flaggedStubs: 12,
+      topEmployer: 'Starlight Home Care',
+      patternSummary:
+        'Across 47 represented home health aides at Starlight, 12 paystubs are short on the 7th-consecutive-day premium written into the 2025-2028 CBA.',
+    },
+    summary:
+      'Your member Luz Herrera, a home health aide at Starlight Home Care, is missing a CBA-guaranteed travel-time pay line this period. Same pattern is showing up across your other 46 members at this employer.',
+    tagline: 'Cohort pattern: ~$214 per affected member in missed travel time',
+    stateCode: 'TX',
+    city: null,
+    buildShifts: (base) => [
+      makeShift(base, 0, '07:30', '15:45', 30, 0, false, { shiftType: 'day' }),
+      makeShift(base, 1, '07:30', '15:45', 30, 0, false, { shiftType: 'day' }),
+      makeShift(base, 2, '07:30', '15:45', 30, 0, false, { shiftType: 'day' }),
+      makeShift(base, 3, '07:30', '15:45', 30, 0, false, { shiftType: 'day' }),
+      makeShift(base, 4, '07:30', '15:45', 30, 0, false, { shiftType: 'day' }),
+      makeShift(base, 7, '07:30', '15:45', 30, 0, false, { shiftType: 'day' }),
+      makeShift(base, 8, '07:30', '15:45', 30, 0, false, { shiftType: 'day' }),
+      makeShift(base, 9, '07:30', '15:45', 30, 0, false, { shiftType: 'day' }),
+      makeShift(base, 10, '07:30', '17:45', 30, 0, true, { shiftType: 'day' }),
+      makeShift(base, 11, '07:30', '15:45', 30, 0, false, { shiftType: 'day' }),
+    ],
+    paystub: (base) => ({
+      employer_name: 'Starlight Home Care',
+      pay_period_start: fmtDate(base, 0),
+      pay_period_end: fmtDate(base, 13),
+      hours_paid: 80,
+      overtime_hours_paid: 4,
+      hourly_rate: 17.85,
+      overtime_rate: 26.78,
+      gross_pay: 1535.1,
+      deductions: [
+        { name: 'Federal Tax', amount: 122.81 },
+        { name: 'Social Security', amount: 95.18 },
+        { name: 'Medicare', amount: 22.26 },
+        { name: 'SEIU Local 199 Dues', amount: 41.0 },
+        { name: 'Medical (Union Plan)', amount: 28.0 },
+      ],
+      tips_reported: 0,
+      net_pay: 1225.85,
+    }),
+    prefs: {
+      industryMode: 'healthcare',
+      healthcareMode: true,
+      nightDiff: 0,
+      weekendDiff: 0,
+      holidayPremiumPerHour: null,
+      industry: 'home_care',
+      paySituation: 'multi_rate',
+      occupationCode: '31-1121',
+      payFrequency: 'biweekly',
+      filingStatus: 'single',
+      organizerMode: true,
+      organizerOrgName: 'SEIU Local 199',
+      organizerOrgType: 'Labor union',
+      organizerCity: 'Houston, TX',
+      organizerMemberCount: 47,
+      organizerFlaggedStubs: 12,
+      organizerTopEmployer: 'Starlight Home Care',
+      organizerPatternSummary:
+        'Across 47 represented home health aides at Starlight, 12 paystubs are short on the 7th-consecutive-day premium written into the 2025-2028 CBA.',
+    },
+  },
 ]
 
 export function loadScenario(scenarioId) {
@@ -282,21 +358,23 @@ export function loadScenario(scenarioId) {
 // paperwork consistent across the pay stub, timesheet, and Dashboard.
 function departmentFor(scenarioId) {
   switch (scenarioId) {
-    case 'sarah':   return 'ICU / Intensive Care'
-    case 'marcus':  return 'Inbound Dock, Bldg 4'
-    case 'destiny': return 'Memory Care, Wing B'
-    case 'maria':   return 'Front of House'
-    default:        return ''
+    case 'sarah':     return 'ICU / Intensive Care'
+    case 'marcus':    return 'Inbound Dock, Bldg 4'
+    case 'destiny':   return 'Memory Care, Wing B'
+    case 'maria':     return 'Front of House'
+    case 'organizer': return 'Home Health, Houston South'
+    default:          return ''
   }
 }
 
 function scenarioTimesheetSource(id) {
   switch (id) {
-    case 'sarah':   return 'Kronos Workforce Central · Timecard export'
-    case 'marcus':  return 'UKG Dimensions · Badge clock report'
-    case 'destiny': return 'Kronos InTouch terminal · Rounded timecard'
-    case 'maria':   return 'Toast POS · Timesheet export'
-    default:        return 'Employer time record'
+    case 'sarah':     return 'Kronos Workforce Central · Timecard export'
+    case 'marcus':    return 'UKG Dimensions · Badge clock report'
+    case 'destiny':   return 'Kronos InTouch terminal · Rounded timecard'
+    case 'maria':     return 'Toast POS · Timesheet export'
+    case 'organizer': return 'Paycom Timecard · Member-uploaded'
+    default:          return 'Employer time record'
   }
 }
 

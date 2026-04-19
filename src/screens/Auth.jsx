@@ -78,7 +78,7 @@ export default function Auth() {
         <div className="w-full max-w-md">
           <Link to="/" className="flex items-center gap-2 mb-6 text-white">
             <BrandMark size={30} />
-            <Wordmark height={24} />
+            <Wordmark size={22} />
           </Link>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-7 glass-edge">

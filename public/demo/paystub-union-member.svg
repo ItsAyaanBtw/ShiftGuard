@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1160" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif">
+  <rect width="900" height="1160" fill="#ffffff"/>
+  <rect x="0" y="0" width="900" height="104" fill="#1f3a5f"/>
+  <text x="48" y="52" fill="#ffffff" font-size="22" font-weight="700" letter-spacing="0.5">STARLIGHT HOME CARE SERVICES</text>
+  <text x="48" y="76" fill="#c2d4ed" font-size="12">4820 Westheimer Road, Houston, TX 77027  |  Payroll Services  |  EIN: 76-0488102</text>
+  <text x="852" y="52" text-anchor="end" fill="#ffffff" font-size="16" font-weight="600">Pay Statement</text>
+  <text x="852" y="72" text-anchor="end" fill="#c2d4ed" font-size="11">Processed via Paycom</text>
+  <text x="852" y="90" text-anchor="end" fill="#c2d4ed" font-size="11">Represented by SEIU Local 199</text>
+
+  <g font-size="11">
+    <rect x="48" y="136" width="804" height="108" fill="#f4f7fb" stroke="#d8dde8"/>
+    <text x="64" y="162" fill="#5f6b83" font-weight="600" letter-spacing="0.5">EMPLOYEE</text>
+    <text x="64" y="182" fill="#1a2541" font-size="13" font-weight="600">Luz M. Herrera, Home Health Aide</text>
+    <text x="64" y="200" fill="#1a2541">Employee ID: HHA-3347</text>
+    <text x="64" y="216" fill="#1a2541">Region: Houston South, Territory 4</text>
+    <text x="64" y="232" fill="#1a2541">Classification: Non-exempt, union-represented</text>
+
+    <text x="344" y="162" fill="#5f6b83" font-weight="600" letter-spacing="0.5">PAY PERIOD</text>
+    <text x="344" y="182" fill="#1a2541" font-size="13" font-weight="600">Apr 05, 2026 &#8211; Apr 18, 2026</text>
+    <text x="344" y="200" fill="#1a2541">Check Date: Apr 23, 2026</text>
+    <text x="344" y="216" fill="#1a2541">Check Number: 108812</text>
+    <text x="344" y="232" fill="#1a2541">Pay Frequency: Biweekly</text>
+
+    <text x="604" y="162" fill="#5f6b83" font-weight="600" letter-spacing="0.5">UNION</text>
+    <text x="604" y="182" fill="#1a2541" font-size="13" font-weight="600">SEIU Local 199</text>
+    <text x="604" y="200" fill="#1a2541">Dues: $41.00 biweekly</text>
+    <text x="604" y="216" fill="#1a2541">Contract: 2025-2028 CBA</text>
+    <text x="604" y="232" fill="#1a2541">Steward: A. Washington</text>
+  </g>
+
+  <g font-size="11">
+    <rect x="48" y="272" width="804" height="32" fill="#1f3a5f"/>
+    <text x="64" y="292" fill="#ffffff" font-weight="600">EARNINGS</text>
+    <text x="384" y="292" fill="#ffffff" font-weight="600" text-anchor="end">Rate</text>
+    <text x="484" y="292" fill="#ffffff" font-weight="600" text-anchor="end">Hours</text>
+    <text x="612" y="292" fill="#ffffff" font-weight="600" text-anchor="end">Current</text>
+    <text x="836" y="292" fill="#ffffff" font-weight="600" text-anchor="end">Year-to-date</text>
+
+    <g fill="#1a2541">
+      <text x="64" y="324">Regular</text>
+      <text x="384" y="324" text-anchor="end">$17.8500</text>
+      <text x="484" y="324" text-anchor="end">80.00</text>
+      <text x="612" y="324" text-anchor="end">$1,428.00</text>
+      <text x="836" y="324" text-anchor="end">$11,424.00</text>
+
+      <text x="64" y="346">Overtime (1.5&#215;)</text>
+      <text x="384" y="346" text-anchor="end">$26.7750</text>
+      <text x="484" y="346" text-anchor="end">4.00</text>
+      <text x="612" y="346" text-anchor="end">$107.10</text>
+      <text x="836" y="346" text-anchor="end">$642.60</text>
+
+      <text x="64" y="368" fill="#78839e">Client-site travel time (CBA Art. 12)</text>
+      <text x="384" y="368" text-anchor="end" fill="#78839e">$17.8500</text>
+      <text x="484" y="368" text-anchor="end" fill="#78839e">0.00</text>
+      <text x="612" y="368" text-anchor="end" fill="#78839e">$0.00</text>
+      <text x="836" y="368" text-anchor="end" fill="#78839e">$214.20</text>
+    </g>
+
+    <line x1="48" y1="388" x2="852" y2="388" stroke="#d8dde8"/>
+    <text x="64" y="408" fill="#1a2541" font-weight="700">Total earnings</text>
+    <text x="612" y="408" fill="#1a2541" font-weight="700" text-anchor="end">$1,535.10</text>
+    <text x="836" y="408" fill="#1a2541" font-weight="700" text-anchor="end">$12,280.80</text>
+  </g>
+
+  <g font-size="11">
+    <rect x="48" y="440" width="804" height="32" fill="#1f3a5f"/>
+    <text x="64" y="460" fill="#ffffff" font-weight="600">DEDUCTIONS &amp; TAXES</text>
+    <text x="612" y="460" fill="#ffffff" font-weight="600" text-anchor="end">Current</text>
+    <text x="836" y="460" fill="#ffffff" font-weight="600" text-anchor="end">Year-to-date</text>
+
+    <g fill="#1a2541">
+      <text x="64" y="492">Federal Income Tax</text>
+      <text x="612" y="492" text-anchor="end">$122.81</text>
+      <text x="836" y="492" text-anchor="end">$982.48</text>
+
+      <text x="64" y="514">Social Security (FICA, 6.2%)</text>
+      <text x="612" y="514" text-anchor="end">$95.18</text>
+      <text x="836" y="514" text-anchor="end">$761.41</text>
+
+      <text x="64" y="536">Medicare (1.45%)</text>
+      <text x="612" y="536" text-anchor="end">$22.26</text>
+      <text x="836" y="536" text-anchor="end">$178.07</text>
+
+      <text x="64" y="558">SEIU Local 199 Dues</text>
+      <text x="612" y="558" text-anchor="end">$41.00</text>
+      <text x="836" y="558" text-anchor="end">$328.00</text>
+
+      <text x="64" y="580">Medical (union plan, pre-tax)</text>
+      <text x="612" y="580" text-anchor="end">$28.00</text>
+      <text x="836" y="580" text-anchor="end">$224.00</text>
+    </g>
+
+    <line x1="48" y1="602" x2="852" y2="602" stroke="#d8dde8"/>
+    <text x="64" y="624" fill="#1a2541" font-weight="700">Total deductions</text>
+    <text x="612" y="624" fill="#1a2541" font-weight="700" text-anchor="end">$309.25</text>
+    <text x="836" y="624" fill="#1a2541" font-weight="700" text-anchor="end">$2,473.96</text>
+  </g>
+
+  <g>
+    <rect x="48" y="664" width="390" height="150" fill="#f4f7fb" stroke="#d8dde8"/>
+    <text x="64" y="692" fill="#5f6b83" font-size="11" font-weight="600" letter-spacing="0.5">PAY SUMMARY</text>
+    <line x1="64" y1="706" x2="422" y2="706" stroke="#d8dde8"/>
+    <text x="64" y="732" fill="#1a2541" font-size="12">Gross pay</text>
+    <text x="422" y="732" text-anchor="end" fill="#1a2541" font-size="12">$1,535.10</text>
+    <text x="64" y="754" fill="#1a2541" font-size="12">Total deductions</text>
+    <text x="422" y="754" text-anchor="end" fill="#1a2541" font-size="12">&#8722;$309.25</text>
+    <line x1="64" y1="768" x2="422" y2="768" stroke="#d8dde8"/>
+    <text x="64" y="796" fill="#1f3a5f" font-size="16" font-weight="700">Net pay</text>
+    <text x="422" y="796" text-anchor="end" fill="#c45a1c" font-size="20" font-weight="700">$1,225.85</text>
+
+    <rect x="462" y="664" width="390" height="150" fill="#f4f7fb" stroke="#d8dde8"/>
+    <text x="478" y="692" fill="#5f6b83" font-size="11" font-weight="600" letter-spacing="0.5">YEAR-TO-DATE</text>
+    <line x1="478" y1="706" x2="836" y2="706" stroke="#d8dde8"/>
+    <text x="478" y="732" fill="#1a2541" font-size="12">YTD gross</text>
+    <text x="836" y="732" text-anchor="end" fill="#1a2541" font-size="12">$12,280.80</text>
+    <text x="478" y="754" fill="#1a2541" font-size="12">YTD taxes &amp; deductions</text>
+    <text x="836" y="754" text-anchor="end" fill="#1a2541" font-size="12">&#8722;$2,473.96</text>
+    <line x1="478" y1="768" x2="836" y2="768" stroke="#d8dde8"/>
+    <text x="478" y="796" fill="#1f3a5f" font-size="16" font-weight="700">YTD net</text>
+    <text x="836" y="796" text-anchor="end" fill="#1a2541" font-size="20" font-weight="700">$9,806.84</text>
+  </g>
+
+  <g fill="#5f6b83" font-size="10">
+    <line x1="48" y1="1060" x2="852" y2="1060" stroke="#d8dde8"/>
+    <text x="48" y="1082">Employer: Starlight Home Care Services, 4820 Westheimer Rd, Houston, TX 77027  |  HR: (713) 555-0196  |  Steward: awashington@seiu199.org</text>
+    <text x="48" y="1100">Represented employees may file grievances under Article 14 of the 2025-2028 CBA. Retaliation is prohibited under the NLRA and Art. 17 of the CBA.</text>
+    <text x="48" y="1118">Processed via Paycom &#8226; Document ID SHC-PYSLI-108812-2026P08 &#8226; Page 1 of 1</text>
+  </g>
+</svg>
