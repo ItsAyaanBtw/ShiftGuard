@@ -354,7 +354,7 @@ export default function Comparison() {
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                 Run the Deep Audit once for $14.99 and we&rsquo;ll check the last 12 months of paystubs
                 the same way. If a single catch returns the average $3,300/year, that&rsquo;s a 220x return.
-                Pro at $6.99/month is there after that if you want every paycheck checked automatically.
+                Pro at $7.99/month is there after that if you want every paycheck checked automatically.
               </p>
               <div className="mt-2 flex items-center gap-2">
                 <Link

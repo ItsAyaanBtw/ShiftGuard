@@ -10,9 +10,6 @@ import Tools from './screens/Tools'
 import Vault from './screens/Vault'
 import HistoryScreen from './screens/History'
 import Pricing from './screens/Pricing'
-import Onboarding from './screens/Onboarding'
-import EntryPicker from './screens/EntryPicker'
-import PaystubDetail from './screens/PaystubDetail'
 import Integrations from './screens/Integrations'
 import Geofence from './screens/Geofence'
 
@@ -40,11 +37,12 @@ export default function App() {
       <Route path="/history" element={<HistoryScreen />} />
       <Route path="/action" element={<Navigate to="/report" replace />} />
       <Route path="/pricing" element={<Pricing />} />
-      <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/start" element={<EntryPicker />} />
-      <Route path="/paystub/:id" element={<PaystubDetail />} />
       <Route path="/integrations" element={<Integrations />} />
       <Route path="/geofence" element={<Geofence />} />
+      {/* Legacy routes (preserved as redirects so old links keep working) */}
+      <Route path="/start" element={<Navigate to="/upload" replace />} />
+      <Route path="/onboarding" element={<Navigate to="/log" replace />} />
+      <Route path="/paystub/:id" element={<Navigate to="/vault" replace />} />
       <Route
         path="/dashboard"
         element={

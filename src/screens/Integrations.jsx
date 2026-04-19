@@ -123,7 +123,6 @@ function IntegrationCard({ adapter, record, onSaved }) {
   const [info, setInfo] = useState('')
   const [token, setToken] = useState(record?.token || '')
   const [icalUrl, setIcalUrl] = useState(record?.icalUrl || '')
-  const [accountId, setAccountId] = useState(record?.auth?.accountId || '')
   const [csvText, setCsvText] = useState('')
   const [jsonText, setJsonText] = useState('')
   const [placeFilterName, setPlaceFilterName] = useState('')
@@ -135,11 +134,10 @@ function IntegrationCard({ adapter, record, onSaved }) {
     setBusy(true); setError(''); setInfo('')
     try {
       const verify = adapter.verify
-      if (verify) await verify({ token, accountId })
+      if (verify) await verify({ token })
       saveIntegration(adapter.id, {
         name: adapter.name,
         token,
-        auth: adapter.authType === 'token_and_account' ? { accountId } : null,
       })
       setInfo('Connected. Ready to sync.')
       onSaved?.()
@@ -176,8 +174,6 @@ function IntegrationCard({ adapter, record, onSaved }) {
         imported = await adapter.importShifts({ icalUrl: live.icalUrl })
       } else if (adapter.authType === 'token') {
         imported = await adapter.importShifts({ token: live.token })
-      } else if (adapter.authType === 'token_and_account') {
-        imported = await adapter.importShifts({ token: live.token, accountId: live.auth?.accountId })
       } else if (adapter.authType === 'csv_upload') {
         if (!csvText.trim()) throw new Error('Paste or drop in the CSV first.')
         imported = await adapter.importShifts({ csv: csvText })
@@ -219,7 +215,7 @@ function IntegrationCard({ adapter, record, onSaved }) {
 
   function disconnect() {
     removeIntegration(adapter.id)
-    setToken(''); setIcalUrl(''); setAccountId(''); setCsvText('')
+    setToken(''); setIcalUrl(''); setCsvText(''); setJsonText('')
     setInfo('Disconnected.')
     onSaved?.()
   }
@@ -307,28 +303,6 @@ function IntegrationCard({ adapter, record, onSaved }) {
                   onChange={e => setToken(e.target.value)}
                   placeholder="Personal access token"
                   autoComplete="off"
-                  className={inputCls}
-                />
-              </Field>
-              <SaveRow onSave={connectToken} busy={busy} label="Verify & save" />
-            </>
-          )}
-          {adapter.authType === 'token_and_account' && (
-            <>
-              <Field label="Personal access token">
-                <input
-                  type="password"
-                  value={token}
-                  onChange={e => setToken(e.target.value)}
-                  autoComplete="off"
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="Harvest account ID">
-                <input
-                  type="text"
-                  value={accountId}
-                  onChange={e => setAccountId(e.target.value)}
                   className={inputCls}
                 />
               </Field>

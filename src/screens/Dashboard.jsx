@@ -636,7 +636,7 @@ function PayPictureGrid() {
             {recentStubs.map((p, i) => (
               <li key={`${p?.employer_name || 'stub'}-${i}`}>
                 <Link
-                  to={`/paystub/${i}`}
+                  to="/vault"
                   className="flex items-center justify-between py-3 hover:bg-slate-800/40 -mx-2 px-2 rounded-lg transition-colors"
                 >
                   <div className="min-w-0">

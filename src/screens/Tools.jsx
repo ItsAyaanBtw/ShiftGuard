@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  Wrench, TrendingUp, Gauge, Plane, Coins, Mail, Scale, ArrowRight,
+  Wrench, TrendingUp, Plane, Coins, Mail, Scale, ArrowRight,
   Lock, DollarSign, Sparkles, ShieldCheck, Calculator, CalendarClock,
   FileText, LineChart,
 } from 'lucide-react'
@@ -15,7 +15,6 @@ import { WAGE_THEFT_ROI, PRO_MONTHLY_USD, PRO_ANNUAL_USD } from '../lib/roiConst
 
 import MarketRateTool from '../components/tools/MarketRateTool'
 import PtoValueTool from '../components/tools/PtoValueTool'
-import VolatilityTool from '../components/tools/VolatilityTool'
 import TravelBlendTool from '../components/tools/TravelBlendTool'
 import RetroPayTool from '../components/tools/RetroPayTool'
 import HrEmailTool from '../components/tools/HrEmailTool'
@@ -80,14 +79,6 @@ const TOOLS = [
     icon: Coins,
     blurb: 'What your accrued PTO is actually worth in dollars.',
     component: PtoValueTool,
-  },
-  {
-    id: 'volatility',
-    name: 'Paycheck volatility score',
-    tier: 'pro',
-    icon: Gauge,
-    blurb: 'How steady your weekly hours are. Shareable number.',
-    component: VolatilityTool,
   },
   {
     id: 'hremail',
@@ -276,7 +267,7 @@ function Paywall({ onActivate, onDemoAlternative }) {
       <h3 className="text-xl font-semibold text-white tracking-tight">This tool is part of Pro</h3>
       <p className="mt-3 text-sm text-slate-400 leading-relaxed">
         Pro opens unlimited paycheck checks, industry pay packs, the inquiry email composer,
-        PTO + volatility tools, the travel-nurse rate X-ray, retro pay estimates, and pattern detection.
+        the paystub explainer, paycheck predictor, travel-nurse X-ray, retro pay, and pattern detection.
         ${PRO_MONTHLY_USD}/month or ${PRO_ANNUAL_USD}/year.
       </p>
       <p className="mt-2 text-xs text-slate-500">

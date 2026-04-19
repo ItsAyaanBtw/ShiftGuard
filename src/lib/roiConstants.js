@@ -35,8 +35,8 @@ export const WAGE_THEFT_ROI = {
  * Defaults to ShiftGuard's Pro price so we have one source of truth for the "$X pays for
  * itself N times over" copy.
  */
-export const PRO_MONTHLY_USD = 6.99
-export const PRO_ANNUAL_USD = 59
+export const PRO_MONTHLY_USD = 7.99
+export const PRO_ANNUAL_USD = 69
 export const DEEP_AUDIT_ONE_TIME_USD = 14.99
 
 export function proMonthlyRoiMultiple({ proMonthlyUSD = PRO_MONTHLY_USD } = {}) {
