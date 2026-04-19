@@ -27,16 +27,16 @@ import {
  */
 
 const MARQUEE_ITEMS = [
+  'Schedule said 32 hrs, paystub paid 30',
+  'Tip credit math looks off',
+  'Federal tax higher than expected',
+  'No overtime premium on Sunday',
+  'Target + DoorDash, one dashboard',
   'Missing overtime premium',
   'Night differential gaps',
-  'Weekend shift diff not applied',
-  'Holiday pay at base rate',
   'Meal-break premium owed (CA)',
   'Clock-in rounded against you',
-  'Productivity bonus dropped',
-  'Double-time on the 13th hour (CA)',
-  'Tip credit math looks off',
-  'Charge-nurse pay shortfall',
+  'Holiday pay at base rate',
   'Per-diem missing on the stub',
   'Shift differential stacked wrong on OT',
 ]
@@ -97,29 +97,27 @@ export default function Landing() {
               <span className="relative inline-flex">
                 <span className="h-2 w-2 rounded-full bg-terracotta sg-breath text-terracotta" />
               </span>
-              Built for hourly workers who do the math
+              Built for workers with irregular hours
             </div>
 
             <h1 className="mt-6 text-[2.5rem] leading-[1.05] sm:text-6xl md:text-7xl font-semibold text-white tracking-[-0.03em] text-balance">
-              Know exactly{' '}
-              <span className="font-display text-terracotta">what you&rsquo;re owed</span>
+              All your pay,{' '}
               <br className="hidden sm:block" />
-              <span className="text-slate-400 font-normal">before payday surprises you.</span>
+              <span className="font-display text-terracotta">finally in one place.</span>
             </h1>
 
             <p className="mt-6 text-base sm:text-lg text-slate-400 leading-relaxed max-w-[58ch]">
-              Log your shifts. Upload the employer time record that backs them up. Drop in the pay stub.
-              Every line gets checked against federal, state, and industry-specific pay rules, and the
-              result is a plain-language report you can hand to payroll.
+              Upload a paystub, log a shift, or drop in next week&rsquo;s schedule. PayTrack explains every
+              deduction in plain English and flags discrepancies between what you worked and what you got paid.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <MagneticButton
                 strength={14}
-                onClick={() => navigate('/log')}
+                onClick={() => navigate('/start')}
                 className="sg-shine-host inline-flex items-center justify-center gap-2 px-6 py-4 bg-terracotta hover:bg-terracotta-dark text-white font-semibold rounded-xl text-base min-h-[52px] shadow-warm transition-colors"
               >
-                Start a paycheck check
+                Get started
                 <ArrowRight className="w-4 h-4" />
               </MagneticButton>
 
@@ -171,6 +169,13 @@ export default function Landing() {
             Annual Pro at ${PRO_ANNUAL_USD}/year pays for itself{' '}
             <span className="text-white font-semibold">{proAnnualRoiMultiple()}x over</span>.
           </p>
+          <p className="mt-4 text-slate-300 leading-relaxed max-w-2xl">
+            And you&rsquo;re not alone:{' '}
+            <span className="font-display text-terracotta">
+              <AnimatedCounter value={27} suffix="M+" />
+            </span>{' '}
+            Americans work more than one job (BLS Current Population Survey).
+          </p>
           <p className="mt-2 text-[11px] text-slate-500 leading-relaxed">
             Sources: EPI &ldquo;Employers Steal Billions&rdquo;; DOL WHD FY 2024 data found {WAGE_THEFT_ROI.healthcareFacilityViolationRatePct}% of investigated
             residential care and nursing facilities had federal wage-law violations.
@@ -193,7 +198,7 @@ export default function Landing() {
         <ScrollReveal className="max-w-6xl mx-auto mb-10 sm:mb-14">
           <p className="text-xs font-medium text-terracotta uppercase tracking-[0.18em]">How it works</p>
           <h2 className="mt-3 text-3xl sm:text-5xl font-semibold text-white tracking-[-0.025em] text-balance max-w-3xl">
-            Five steps. <span className="font-display text-slate-300">No spreadsheets.</span>
+            Five steps. <span className="font-display text-slate-300">One pay picture.</span>
           </h2>
         </ScrollReveal>
 
@@ -208,8 +213,9 @@ export default function Landing() {
             For shifts that don&rsquo;t fit a <span className="font-display text-slate-300">9-to-5 spreadsheet</span>.
           </h2>
           <p className="mt-3 text-slate-400 leading-relaxed max-w-2xl">
-            ShiftGuard launches with healthcare because nurses have the most complex pay and the strongest
-            communities. The same math works for warehouse, restaurant, and skilled-trades workers too.
+            Maria works at Target and picks up DoorDash shifts. No app handles both. PayTrack puts her
+            Target paystub, her DoorDash earnings, and her schedule in one place. Healthcare, warehouse,
+            restaurants, trades &mdash; anywhere irregular hours go, we go.
           </p>
         </ScrollReveal>
 
@@ -357,10 +363,10 @@ export default function Landing() {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <MagneticButton
               strength={14}
-              onClick={() => navigate('/log')}
+              onClick={() => navigate('/start')}
               className="sg-shine-host inline-flex items-center gap-2 px-7 py-4 bg-terracotta hover:bg-terracotta-dark text-white font-semibold rounded-xl text-base min-h-[52px] shadow-warm transition-colors"
             >
-              Start verifying
+              Get started
               <ArrowRight className="w-4 h-4" />
             </MagneticButton>
             <Link
@@ -549,43 +555,43 @@ function Stat({ value, suffix = '', decimals = 0, label }) {
    ============================================================ */
 const FEATURES = [
   {
-    icon: Clock,
+    icon: Camera,
     step: '01',
-    title: 'Log a shift the way it actually happened',
-    body: 'Tap in, tap out, mark a missed break, add charge or preceptor pay. Everything stays on your device. Nothing is uploaded to a server unless you ask.',
-    bullets: ['Differentials per shift', 'Optional break tracking', 'Offline-first storage'],
+    title: 'Add what you have',
+    body: 'A paystub, next week\u2019s schedule, or hours you\u2019ve worked but haven\u2019t been paid for. Mix and match across the month. Whatever you have, drop it in.',
+    bullets: ['Paystub upload', 'Schedule entry', 'Quick hours log'],
     tone: 'rgba(217,119,74,0.16)',
   },
   {
-    icon: ShieldCheck,
+    icon: FileText,
     step: '02',
-    title: 'Back those hours with an employer record',
-    body: 'Upload a Kronos, UKG, Workday, ADP, or Paycom timesheet (or a posted schedule). Each logged shift gets matched to an employer entry so the paycheck check runs on hours you can prove.',
-    bullets: ['Kronos, UKG, Workday, ADP, Paycom', 'Image or PDF', 'Side-by-side reconciliation'],
+    title: 'See it parsed and explained in plain English',
+    body: 'Every deduction gets a one-line explanation. Federal tax, FICA, state tax, the weird ones from your employer. No more Googling "what is OASDI on my paycheck".',
+    bullets: ['Plain-English breakdown', 'Every line explained', 'No jargon'],
     tone: 'rgba(70,140,200,0.14)',
   },
   {
-    icon: Camera,
+    icon: BarChart3,
     step: '03',
-    title: 'Drop in your pay stub',
-    body: 'Every field is pulled from the image for you to review. Hours, gross, overtime, rates. You confirm the numbers before anything is saved.',
-    bullets: ['JPEG, PNG, or WebP', 'Review before saving', 'Re-upload anytime'],
+    title: 'Everything lands on one dashboard',
+    body: 'Paid so far this month, projected from your schedule, hours logged, employers in the mix. The whole pay picture in one view, across every job.',
+    bullets: ['Month-to-date paid', 'Projected from schedule', 'Multi-employer'],
     tone: 'rgba(220,170,90,0.13)',
   },
   {
-    icon: BarChart3,
+    icon: ShieldCheck,
     step: '04',
-    title: 'Side-by-side comparison, with the math shown',
-    body: 'Hours worked vs. hours paid, overtime vs. premium pay, expected gross vs. actual. Anything off-target is flagged with the specific rule it touches.',
-    bullets: ['Federal + state + city rules', 'Healthcare differentials', 'Daily breakdown'],
+    title: 'Get a discrepancy alert when numbers don\u2019t match',
+    body: 'If your schedule says 32 hours but your paystub only paid 30, we flag it — with the dollar gap. Same for overtime premiums, missed differentials, tip credit math.',
+    bullets: ['Schedule vs. paid', 'Hours mismatch', 'Dollar gap shown'],
     tone: 'rgba(120,200,140,0.12)',
   },
   {
-    icon: FileText,
+    icon: Clock,
     step: '05',
-    title: 'A report you can hand to payroll',
-    body: 'A clean PDF. No legalese. Just what you worked, what you were paid, what looks short, and the rule it references, in plain language.',
-    bullets: ['Print or export PDF', 'Anti-retaliation guidance', 'Saved on this device'],
+    title: 'Ask questions about your pay history anytime',
+    body: 'Chat with your own pay data. "Why was February smaller than January?" "Is this deduction normal?" Answers grounded in your actual stubs.',
+    bullets: ['Conversational', 'Grounded in your data', 'On-device first'],
     tone: 'rgba(220,170,90,0.13)',
   },
 ]

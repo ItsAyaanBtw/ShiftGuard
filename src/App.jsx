@@ -11,6 +11,8 @@ import Vault from './screens/Vault'
 import HistoryScreen from './screens/History'
 import Pricing from './screens/Pricing'
 import Onboarding from './screens/Onboarding'
+import EntryPicker from './screens/EntryPicker'
+import PaystubDetail from './screens/PaystubDetail'
 
 const Dashboard = lazy(() => import('./screens/Dashboard'))
 
@@ -37,6 +39,8 @@ export default function App() {
       <Route path="/action" element={<Navigate to="/report" replace />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/start" element={<EntryPicker />} />
+      <Route path="/paystub/:id" element={<PaystubDetail />} />
       <Route
         path="/dashboard"
         element={

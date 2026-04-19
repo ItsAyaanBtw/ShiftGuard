@@ -78,6 +78,21 @@ export default function PaystubUpload() {
       if (!mediaType.startsWith('image/')) mediaType = 'image/jpeg'
 
       const result = await parsePaystub(base64, mediaType)
+
+      if (result.parse_confidence < 0.3) {
+        const note = result.notes || "This doesn't look like a pay stub."
+        setErrorMsg(`Image not recognized as a pay stub: ${note} Try a clearer photo, or enter your data by hand.`)
+        setStep(STEPS.ERROR)
+        return
+      }
+
+      const looksEmpty = !result.employer_name && !Number(result.gross_pay) && !Number(result.hours_paid)
+      if (looksEmpty) {
+        setErrorMsg("We couldn't find pay stub data in this image. Make sure the full stub is visible and in focus, or enter the numbers by hand.")
+        setStep(STEPS.ERROR)
+        return
+      }
+
       setParsedData(result)
       setReviewSource('scan')
       setStep(STEPS.REVIEW)
@@ -365,8 +380,7 @@ function ReviewStep({ data, setData, imagePreview, reviewSource, confirmError, o
   }
 
   function updateNumField(field, value) {
-    const num = parseFloat(value)
-    setData(prev => ({ ...prev, [field]: isNaN(num) ? 0 : num }))
+    setData(prev => ({ ...prev, [field]: value }))
   }
 
   const BANNER_COPY = {

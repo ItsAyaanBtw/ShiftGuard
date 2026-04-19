@@ -63,6 +63,17 @@ const DEFAULT_PREFS = {
 /** Free plan verification cap per calendar month. Updated to 3 per product spec. */
 export const FREE_MONTHLY_CHECK_LIMIT = 3
 
+const PAYSTUB_NUMBER_FIELDS = [
+  'hours_paid',
+  'overtime_hours_paid',
+  'hourly_rate',
+  'overtime_rate',
+  'gross_pay',
+  'tips_reported',
+  'net_pay',
+  'parse_confidence',
+]
+
 function notifyDataChanged() {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('shiftguard-data-changed'))
@@ -92,8 +103,66 @@ function remove(key) {
   notifyDataChanged()
 }
 
+function isRecord(value) {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function toFiniteNumber(value) {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : 0
+}
+
+function normalizeDeduction(entry) {
+  if (!isRecord(entry)) return null
+  return {
+    ...entry,
+    name: String(entry.name || ''),
+    amount: toFiniteNumber(entry.amount),
+  }
+}
+
+function normalizePaystubRecord(paystub) {
+  if (!isRecord(paystub)) return null
+
+  const normalized = { ...paystub }
+  for (const field of PAYSTUB_NUMBER_FIELDS) {
+    normalized[field] = toFiniteNumber(paystub[field])
+  }
+
+  normalized.employer_name = String(paystub.employer_name || '')
+  normalized.pay_period_start = String(paystub.pay_period_start || '')
+  normalized.pay_period_end = String(paystub.pay_period_end || '')
+  normalized.pay_date = paystub.pay_date ? String(paystub.pay_date) : ''
+  normalized.state = paystub.state ? String(paystub.state) : ''
+  normalized.notes = paystub.notes ? String(paystub.notes) : ''
+  normalized.deductions = Array.isArray(paystub.deductions)
+    ? paystub.deductions.map(normalizeDeduction).filter(Boolean)
+    : []
+
+  return normalized
+}
+
+function normalizeVaultEntry(entry, index = 0) {
+  if (!isRecord(entry)) return null
+
+  const paystub = normalizePaystubRecord(entry.paystub || entry)
+  if (!paystub) return null
+
+  const paystubKey = entry.paystubKey || vaultKeyFor(paystub) || null
+  const fallbackId = paystubKey || `stub-${index}`
+
+  return {
+    id: String(entry.id || fallbackId),
+    paystubKey,
+    savedAt: String(entry.savedAt || paystub.pay_date || paystub.pay_period_end || ''),
+    paystub,
+    imageUrl: typeof entry.imageUrl === 'string' ? entry.imageUrl : null,
+  }
+}
+
 export function getShifts() {
-  return read(KEYS.SHIFTS) || []
+  const shifts = read(KEYS.SHIFTS)
+  return Array.isArray(shifts) ? shifts : []
 }
 
 export function saveShifts(shifts) {
@@ -114,11 +183,13 @@ export function saveTimesheetRecord(record) {
 }
 
 export function getPaystub() {
-  return read(KEYS.PAYSTUB)
+  return normalizePaystubRecord(read(KEYS.PAYSTUB))
 }
 
 export function savePaystub(paystub) {
-  write(KEYS.PAYSTUB, paystub)
+  const normalized = normalizePaystubRecord(paystub)
+  if (!normalized) return
+  write(KEYS.PAYSTUB, normalized)
 }
 
 export function getPaystubImage() {
@@ -171,7 +242,8 @@ export function saveViolations(analysis) {
 
 /** Newest first. Each compare run appends an event (audit-style). */
 export function getVerificationHistory() {
-  return read(KEYS.VERIFICATION_HISTORY) || []
+  const history = read(KEYS.VERIFICATION_HISTORY)
+  return Array.isArray(history) ? history : []
 }
 
 /** Sum of latest totalDifference per distinct pay period (paystubKey). */
@@ -227,7 +299,9 @@ export function getFreeChecksRemainingThisMonth() {
  * Keep images small (SVG demo assets, compressed user uploads) because localStorage caps at ~5 MB.
  */
 export function getPaystubVault() {
-  return read(KEYS.VAULT) || []
+  const vault = read(KEYS.VAULT)
+  if (!Array.isArray(vault)) return []
+  return vault.map(normalizeVaultEntry).filter(Boolean)
 }
 
 function vaultKeyFor(paystub) {
@@ -240,13 +314,14 @@ function vaultKeyFor(paystub) {
  * so re-saving the same stub just updates the existing entry.
  */
 export function saveStubToVault(paystub, imageUrl = null) {
-  if (!paystub || typeof paystub !== 'object') return null
-  const key = vaultKeyFor(paystub)
+  const normalizedPaystub = normalizePaystubRecord(paystub)
+  if (!normalizedPaystub) return null
+  const key = vaultKeyFor(normalizedPaystub)
   const entry = {
     id: key || `stub-${Date.now()}`,
     paystubKey: key,
     savedAt: new Date().toISOString(),
-    paystub,
+    paystub: normalizedPaystub,
     imageUrl: typeof imageUrl === 'string' && imageUrl.length < 40_000 ? imageUrl : null,
   }
   const current = getPaystubVault()
@@ -277,7 +352,8 @@ export function clearVault() {
  * something looks off. Shape: { id, at, severity: 'info'|'warn'|'alert', title, detail }.
  */
 export function getAnomalies() {
-  return read(KEYS.ANOMALIES) || []
+  const anomalies = read(KEYS.ANOMALIES)
+  return Array.isArray(anomalies) ? anomalies : []
 }
 
 export function pushAnomaly(entry) {

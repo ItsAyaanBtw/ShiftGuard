@@ -20,6 +20,14 @@ import {
 import { calcShiftHours } from '../lib/utils'
 import stateLaws from '../data/stateLaws'
 
+function fmt12(hhmm) {
+  if (!hhmm) return hhmm
+  const [h, m] = hhmm.split(':').map(Number)
+  const period = h >= 12 ? 'PM' : 'AM'
+  const hour = h % 12 || 12
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`
+}
+
 function newShiftTemplate() {
   return {
     id: '',
@@ -326,7 +334,7 @@ function ShiftCard({ shift, hours, onEdit, onDelete }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 text-sm text-white flex-wrap">
           <Clock className="w-3.5 h-3.5 text-slate-500" />
-          <span>{shift.clockIn} to {shift.clockOut}</span>
+          <span>{fmt12(shift.clockIn)} to {fmt12(shift.clockOut)}</span>
           <span className="text-slate-500">·</span>
           <span className="text-terracotta font-medium">{hours.toFixed(1)}h</span>
           <VerificationPill status={vStatus} />

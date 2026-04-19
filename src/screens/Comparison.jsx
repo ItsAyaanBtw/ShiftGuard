@@ -100,7 +100,7 @@ export default function Comparison() {
     const t = window.setTimeout(() => {
       const s = getShifts()
       const p = getPaystub()
-      const sc = getUserState()
+      const sc = getUserState() || 'TX'
       const cy = getUserCity()
       if (!s.length || !p) {
         setResult(null)

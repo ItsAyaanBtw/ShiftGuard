@@ -1,13 +1,12 @@
 import { useEffect, useReducer } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area,
-  XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import {
-  TrendingUp, DollarSign, AlertTriangle, Users, MapPin,
-  ShieldAlert, ArrowRight, BarChart3, Info, CheckCircle2, History,
-  CalendarClock, Bell,
+  TrendingUp, DollarSign, AlertTriangle,
+  ShieldAlert, ArrowRight, CheckCircle2,
+  CalendarClock, Bell, Receipt, Briefcase, Clock as ClockIcon,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
@@ -17,10 +16,8 @@ import {
   getUserState,
   getVerifiedPaycheckCount,
   getUserPreferences,
-  getVerificationHistory,
-  getCumulativeFlaggedUnique,
-  getPersonalMonthlyFlaggedTrend,
   getPaystub,
+  getPaystubVault,
   getAnomalies,
 } from '../lib/storage'
 import { normalizeAnalysis } from '../lib/analysisUtils'
@@ -28,44 +25,8 @@ import { nextPayday, daysUntil, formatShortDate } from '../lib/payCycle'
 import { estimateTakeHome } from '../lib/taxEstimator'
 import stateLaws from '../data/stateLaws'
 
-const CHART_COLORS = ['#c4784a', '#d4956e', '#e8b898', '#a85e34', '#8a4828']
+const SHOW_DEMO_DISCREPANCY = true
 const SEVERITY_COLORS = { high: '#ef4444', medium: '#f59e0b', low: '#eab308' }
-
-const MOCK_COMMUNITY = {
-  totalDetected: 127_450,
-  usersActive: 3_842,
-  avgPerWorker: 2_634,
-  monthlyTrend: [
-    { month: 'Nov', amount: 68_200 },
-    { month: 'Dec', amount: 74_800 },
-    { month: 'Jan', amount: 89_300 },
-    { month: 'Feb', amount: 95_600 },
-    { month: 'Mar', amount: 112_100 },
-    { month: 'Apr', amount: 127_450 },
-  ],
-  byIndustry: [
-    { name: 'Restaurants', value: 38_200, pct: 30 },
-    { name: 'Retail', value: 25_490, pct: 20 },
-    { name: 'Construction', value: 22_941, pct: 18 },
-    { name: 'Hospitality', value: 17_843, pct: 14 },
-    { name: 'Healthcare', value: 12_745, pct: 10 },
-    { name: 'Other', value: 10_231, pct: 8 },
-  ],
-  byViolationType: [
-    { name: 'Overtime premium', count: 1_842 },
-    { name: 'Hours mismatch', count: 1_256 },
-    { name: 'Minimum wage check', count: 487 },
-    { name: 'Break timing', count: 892 },
-    { name: 'Gross pay gap', count: 634 },
-  ],
-  byRegion: [
-    { name: 'Austin', amount: 42_300, workers: 1_240 },
-    { name: 'Houston', amount: 31_200, workers: 890 },
-    { name: 'Dallas', amount: 24_500, workers: 720 },
-    { name: 'San Antonio', amount: 18_900, workers: 540 },
-    { name: 'Other TX', amount: 10_550, workers: 452 },
-  ],
-}
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -83,10 +44,6 @@ export default function Dashboard() {
   const state = stateLaws[stateCode]
   const prefs = getUserPreferences()
   const verifiedCount = getVerifiedPaycheckCount()
-  const verificationHistory = getVerificationHistory()
-  const cumulativeUnique = getCumulativeFlaggedUnique()
-  const personalTrend = getPersonalMonthlyFlaggedTrend()
-  const uniquePeriods = new Set(verificationHistory.map(h => h.paystubKey)).size
 
   const hasAnalysis = !!(analysis?.summary)
   const hasDiscrepancies = hasAnalysis && analysis.discrepancies.length > 0
@@ -96,13 +53,11 @@ export default function Dashboard() {
       <Header />
 
       <main className="relative z-10 flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-6 pb-24">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white mb-1">Your paycheck dashboard</h1>
-          <p className="text-slate-400 text-sm">
-            Stay on top of every paycheck. Personal stats from your last verification; community figures are illustrative
-            demo data.
-          </p>
-        </div>
+        <OverviewSection prefs={prefs} />
+
+        {SHOW_DEMO_DISCREPANCY && <DiscrepancyBanner />}
+
+        <PayPictureGrid />
 
         <InsightsStrip prefs={prefs} stateCode={stateCode} />
 
@@ -137,313 +92,6 @@ export default function Dashboard() {
             </button>
           </div>
         )}
-
-        {verificationHistory.length > 0 && (
-          <div className="mb-10">
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
-              <History className="w-5 h-5 text-terracotta" />
-              <h2 className="text-lg font-semibold text-white">Your verification history</h2>
-              <span className="text-xs text-slate-600 bg-slate-800 px-2 py-0.5 rounded-full">This device</span>
-              <Link
-                to="/history"
-                className="ml-auto text-xs font-medium text-terracotta hover:text-terracotta-light inline-flex items-center gap-1"
-              >
-                Open full timeline
-                <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-            <p className="text-xs text-slate-500 mb-4 leading-relaxed">
-              Each time you open Compare we store a snapshot here (local only). Cumulative uses the latest run per pay
-              period so re-checking the same stub does not double-count.
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-              <StatCard
-                icon={<BarChart3 className="w-4 h-4" />}
-                label="Pay periods"
-                value={String(uniquePeriods)}
-              />
-              <StatCard
-                icon={<DollarSign className="w-4 h-4" />}
-                label="Cumulative flagged"
-                value={`$${cumulativeUnique.toFixed(2)}`}
-                highlight
-              />
-              <StatCard
-                icon={<History className="w-4 h-4" />}
-                label="Runs on file"
-                value={String(verificationHistory.length)}
-              />
-            </div>
-
-            {personalTrend.length > 0 && (
-              <ChartCard title="Your flagged estimates by month" icon={<TrendingUp className="w-4 h-4" />}>
-                <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={personalTrend}>
-                    <defs>
-                      <linearGradient id="personalArea" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#c4784a" stopOpacity={0.35} />
-                        <stop offset="100%" stopColor="#c4784a" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis
-                      dataKey="month"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#8a8a9a', fontSize: 11 }}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#8a8a9a', fontSize: 11 }}
-                      tickFormatter={v => `$${v}`}
-                    />
-                    <Tooltip
-                      contentStyle={{ background: '#1a1a24', border: '1px solid #2a2a38', borderRadius: 8 }}
-                      formatter={v => [`$${Number(v).toFixed(2)}`, 'Flagged (sum of runs)']}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="amount"
-                      stroke="#c4784a"
-                      strokeWidth={2}
-                      fill="url(#personalArea)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </ChartCard>
-            )}
-
-            <div className="mt-4 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider px-4 py-3 border-b border-slate-800">
-                Recent runs
-              </p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm min-w-[520px]">
-                  <thead>
-                    <tr className="border-b border-slate-800 text-left text-slate-500 text-xs uppercase">
-                      <th className="px-4 py-2">When</th>
-                      <th className="px-4 py-2">Employer</th>
-                      <th className="px-4 py-2">Period</th>
-                      <th className="px-4 py-2 text-right">Flagged</th>
-                      <th className="px-4 py-2 text-right">Items</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {verificationHistory.slice(0, 12).map((row, idx) => (
-                      <tr key={`${row.at}-${row.paystubKey}-${idx}`} className="border-b border-slate-800/60 last:border-0">
-                        <td className="px-4 py-2.5 text-slate-400 whitespace-nowrap">
-                          {new Date(row.at).toLocaleString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                          })}
-                        </td>
-                        <td className="px-4 py-2.5 text-slate-300 max-w-[140px] truncate">{row.employer || '-'}</td>
-                        <td className="px-4 py-2.5 text-slate-400 text-xs whitespace-nowrap">
-                          {row.periodStart && row.periodEnd ? `${row.periodStart} to ${row.periodEnd}` : '-'}
-                        </td>
-                        <td className="px-4 py-2.5 text-right text-amber-400 font-medium">
-                          ${Number(row.totalDifference).toFixed(2)}
-                        </td>
-                        <td className="px-4 py-2.5 text-right text-slate-400">{row.discrepancyCount}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Community section */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Users className="w-5 h-5 text-terracotta" />
-            <h2 className="text-lg font-semibold text-white">Community Impact</h2>
-            <span className="text-xs text-slate-600 bg-slate-800 px-2 py-0.5 rounded-full">Demo data</span>
-          </div>
-
-          {/* Community stat cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <StatCard
-              icon={<DollarSign className="w-4 h-4" />}
-              label="Total detected"
-              value={`$${(MOCK_COMMUNITY.totalDetected).toLocaleString()}`}
-            />
-            <StatCard
-              icon={<Users className="w-4 h-4" />}
-              label="Active workers"
-              value={MOCK_COMMUNITY.usersActive.toLocaleString()}
-            />
-            <StatCard
-              icon={<AlertTriangle className="w-4 h-4" />}
-              label="Avg per worker"
-              value={`$${MOCK_COMMUNITY.avgPerWorker.toLocaleString()}`}
-            />
-            <StatCard
-              icon={<TrendingUp className="w-4 h-4" />}
-              label="Month-over-month"
-              value="+14%"
-              accent
-            />
-          </div>
-        </div>
-
-        {/* Charts grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Monthly trend */}
-          <ChartCard title="Discrepancies flagged over time (demo)" icon={<TrendingUp className="w-4 h-4" />}>
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={MOCK_COMMUNITY.monthlyTrend}>
-                <defs>
-                  <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#c4784a" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#c4784a" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="month"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#8a8a9a', fontSize: 12 }}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#8a8a9a', fontSize: 12 }}
-                  tickFormatter={v => `$${(v / 1000).toFixed(0)}k`}
-                />
-                <Tooltip
-                  contentStyle={{ background: '#1a1a24', border: '1px solid #2a2a38', borderRadius: 8 }}
-                  labelStyle={{ color: '#d0d0da' }}
-                  formatter={v => [`$${v.toLocaleString()}`, 'Detected']}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="#c4784a"
-                  strokeWidth={2}
-                  fill="url(#areaGradient)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </ChartCard>
-
-          {/* Industry breakdown */}
-          <ChartCard title="By industry" icon={<BarChart3 className="w-4 h-4" />}>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={MOCK_COMMUNITY.byIndustry}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={55}
-                  outerRadius={85}
-                  dataKey="value"
-                  paddingAngle={3}
-                  stroke="none"
-                >
-                  {MOCK_COMMUNITY.byIndustry.map((_, i) => (
-                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{ background: '#1a1a24', border: '1px solid #2a2a38', borderRadius: 8 }}
-                  formatter={(v, name) => [`$${v.toLocaleString()}`, name]}
-                />
-                <Legend
-                  iconType="circle"
-                  iconSize={8}
-                  formatter={(value) => <span style={{ color: '#b0b0be', fontSize: 12 }}>{value}</span>}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartCard>
-
-          {/* Violation types */}
-          <ChartCard title="Top discrepancy types (demo)" icon={<AlertTriangle className="w-4 h-4" />}>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={MOCK_COMMUNITY.byViolationType} layout="vertical" barSize={16}>
-                <XAxis
-                  type="number"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#8a8a9a', fontSize: 12 }}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#b0b0be', fontSize: 12 }}
-                  width={110}
-                />
-                <Tooltip
-                  contentStyle={{ background: '#1a1a24', border: '1px solid #2a2a38', borderRadius: 8 }}
-                  formatter={v => [v.toLocaleString(), 'Cases']}
-                />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]} fill="#c4784a" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-
-          {/* Regional breakdown */}
-          <ChartCard title="By region (Texas)" icon={<MapPin className="w-4 h-4" />}>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={MOCK_COMMUNITY.byRegion} barSize={24}>
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#8a8a9a', fontSize: 12 }}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#8a8a9a', fontSize: 12 }}
-                  tickFormatter={v => `$${(v / 1000).toFixed(0)}k`}
-                />
-                <Tooltip
-                  contentStyle={{ background: '#1a1a24', border: '1px solid #2a2a38', borderRadius: 8 }}
-                  formatter={(v, name) => {
-                    if (name === 'amount') return [`$${v.toLocaleString()}`, 'Detected']
-                    return [v, name]
-                  }}
-                />
-                <Bar dataKey="amount" radius={[4, 4, 0, 0]} fill="#c4784a" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
-
-        {/* Context callout */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-6">
-          <h3 className="text-white font-semibold mb-3">Why paycheck verification matters</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-terracotta">22M+</div>
-              <div className="text-xs text-slate-500 mt-1">U.S. healthcare workers with complex pay</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-terracotta">Many</div>
-              <div className="text-xs text-slate-500 mt-1">payroll issues are fixed after a clear paper trail</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-terracotta">Free tier</div>
-              <div className="text-xs text-slate-500 mt-1">keeps core logging available to hourly workers</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-start gap-2 mb-4">
-          <Info className="w-4 h-4 text-slate-600 shrink-0 mt-0.5" />
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Community data shown here is simulated for demonstration purposes.
-            In production, this dashboard would display anonymized, aggregated data from all ShiftGuard users
-            without ever exposing individual worker information.
-          </p>
-        </div>
 
         <Disclaimer />
       </main>
@@ -736,14 +384,202 @@ function StatCard({ icon, label, value, highlight, accent }) {
   )
 }
 
-function ChartCard({ title, icon, children }) {
+
+/* ---------- New overview: welcome + month metrics ---------- */
+
+function OverviewSection({ prefs }) {
+  const now = new Date()
+  const monthLabel = now.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+  const firstName = (prefs?.firstName || prefs?.name || '').toString().trim().split(' ')[0]
+
+  const paystub = getPaystub()
+  const vault = getPaystubVault()
+  const allStubs = [paystub, ...vault.map(v => v?.paystub)].filter(Boolean)
+
+  const thisMonthPaid = allStubs.reduce((sum, p) => {
+    const d = p?.pay_date || p?.pay_period_end
+    if (!d) return sum
+    const dt = new Date(d)
+    if (isNaN(dt.getTime())) return sum
+    if (dt.getFullYear() === now.getFullYear() && dt.getMonth() === now.getMonth()) {
+      return sum + (Number(p.gross_pay) || 0)
+    }
+    return sum
+  }, 0)
+
+  const hoursThisMonth = allStubs.reduce((sum, p) => {
+    const d = p?.pay_date || p?.pay_period_end
+    if (!d) return sum
+    const dt = new Date(d)
+    if (isNaN(dt.getTime())) return sum
+    if (dt.getFullYear() === now.getFullYear() && dt.getMonth() === now.getMonth()) {
+      return sum + (Number(p.hours_paid) || 0) + (Number(p.overtime_hours_paid) || 0)
+    }
+    return sum
+  }, 0)
+
+  const employers = new Set(allStubs.map(p => p?.employer_name).filter(Boolean))
+  const employerCount = employers.size || 1
+
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-terracotta">{icon}</span>
-        <p className="text-sm font-medium text-white">{title}</p>
+    <div className="mb-6">
+      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+        {firstName ? `Welcome back, ${firstName}` : 'Welcome back'}
+      </h1>
+      <p className="text-slate-400 text-sm mb-5">
+        Here&rsquo;s your pay picture for {monthLabel}
+      </p>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
+          icon={<DollarSign className="w-4 h-4" />}
+          label="This month (paid)"
+          value={`$${thisMonthPaid.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+        />
+        <ProjectedCard
+          label="Projected (scheduled)"
+          /* TODO: wire to schedule data in next pass */
+          value="$0"
+        />
+        <StatCard
+          icon={<ClockIcon className="w-4 h-4" />}
+          label="Hours this month"
+          value={hoursThisMonth > 0 ? `${hoursThisMonth.toFixed(1)}h` : '0h'}
+        />
+        <StatCard
+          icon={<Briefcase className="w-4 h-4" />}
+          label="Employers"
+          value={String(employerCount)}
+        />
       </div>
-      {children}
+    </div>
+  )
+}
+
+function ProjectedCard({ label, value }) {
+  return (
+    <div className="rounded-xl p-3 text-center border border-amber-500/25 bg-amber-500/5">
+      <div className="flex items-center justify-center gap-1.5 text-amber-300/80 mb-1">
+        <CalendarClock className="w-4 h-4" />
+        <span className="text-xs uppercase tracking-wider">{label}</span>
+      </div>
+      <div className="text-xl font-bold text-amber-200">{value}</div>
+    </div>
+  )
+}
+
+function DiscrepancyBanner() {
+  return (
+    <div className="mb-6 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 sm:p-5 flex items-start gap-3">
+      <div className="h-9 w-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0">
+        <AlertTriangle className="w-4 h-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-amber-100">Possible discrepancy detected</p>
+        <p className="text-sm text-amber-100/80 mt-1 leading-relaxed">
+          Your Target schedule shows 32 hours but your last paystub paid for 30 hours. You may be owed about $36.
+        </p>
+      </div>
+      <Link
+        to="/compare"
+        className="self-center inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 text-sm font-semibold min-h-[40px] transition-colors shrink-0"
+      >
+        Review
+        <ArrowRight className="w-3.5 h-3.5" />
+      </Link>
+    </div>
+  )
+}
+
+function PayPictureGrid() {
+  const paystub = getPaystub()
+  const vault = getPaystubVault()
+  const recentStubs = [paystub, ...vault.map(v => v?.paystub).filter(Boolean)]
+    .filter(Boolean)
+    .slice(0, 3)
+
+  // TODO: wire to real schedule data model
+  const upcomingShifts = [
+    { id: 1, employer: 'Target', day: 'Mon, Apr 21', time: '10:00 AM – 4:00 PM', hours: 6 },
+    { id: 2, employer: 'Target', day: 'Wed, Apr 23', time: '2:00 PM – 10:00 PM', hours: 8 },
+    { id: 3, employer: 'DoorDash', day: 'Sat, Apr 26', time: 'Evening block', hours: 5 },
+  ]
+
+  return (
+    <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Receipt className="w-4 h-4 text-terracotta" />
+            <h3 className="text-sm font-semibold text-white">Recent paystubs</h3>
+          </div>
+          <Link to="/vault" className="text-xs font-medium text-terracotta hover:text-terracotta-light">
+            View all
+          </Link>
+        </div>
+        {recentStubs.length === 0 ? (
+          <p className="text-sm text-slate-500 py-6 text-center">
+            No paystubs yet. <Link to="/upload" className="text-terracotta hover:text-terracotta-light">Upload one</Link>.
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-800">
+            {recentStubs.map((p, i) => (
+              <li key={`${p?.employer_name || 'stub'}-${i}`}>
+                <Link
+                  to={`/paystub/${i}`}
+                  className="flex items-center justify-between py-3 hover:bg-slate-800/40 -mx-2 px-2 rounded-lg transition-colors"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate">
+                      {p?.employer_name || 'Paystub'}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {p?.pay_period_start && p?.pay_period_end
+                        ? `${p.pay_period_start} – ${p.pay_period_end}`
+                        : 'Pay period'}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0 ml-3">
+                    <p className="text-sm font-semibold text-white nums">
+                      ${(Number(p?.gross_pay) || 0).toFixed(2)}
+                    </p>
+                    <p className="text-[11px] text-slate-500">gross</p>
+                  </div>
+                </Link>
+              </li>
+            ))}
+            {recentStubs.length === 1 && (
+              <li className="py-3 text-xs text-slate-500 text-center">and more&hellip;</li>
+            )}
+          </ul>
+        )}
+      </div>
+
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <CalendarClock className="w-4 h-4 text-terracotta" />
+            <h3 className="text-sm font-semibold text-white">Upcoming shifts</h3>
+          </div>
+          <Link to="/log" className="text-xs font-medium text-terracotta hover:text-terracotta-light">
+            Manage
+          </Link>
+        </div>
+        <ul className="divide-y divide-slate-800">
+          {upcomingShifts.map(s => (
+            <li key={s.id} className="flex items-center justify-between py-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-white truncate">{s.employer}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{s.day} · {s.time}</p>
+              </div>
+              <p className="text-sm text-slate-300 nums shrink-0 ml-3">{s.hours}h</p>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-[11px] text-slate-600">
+          Demo data &mdash; schedule integration is in progress.
+        </p>
+      </div>
     </div>
   )
 }
