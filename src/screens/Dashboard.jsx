@@ -341,7 +341,7 @@ function TimeTile({ icon, label, value }) {
         {icon}
         {label}
       </p>
-      <p className="mt-1 text-xl font-semibold text-white nums">{value}</p>
+      <p className="mt-1 text-xl font-heavy text-white nums">{value}</p>
     </div>
   )
 }
@@ -416,7 +416,7 @@ function InsightsStrip({ prefs, stateCode }) {
           <CalendarClock className="w-4 h-4 text-terracotta" />
           <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Next paycheck</p>
         </div>
-        <p className="mt-1 text-xl font-semibold text-white nums">
+        <p className="mt-1 text-xl font-heavy text-white nums">
           {next ? formatShortDate(next) : 'Set a pay cycle'}
         </p>
         <p className="text-xs text-slate-400 mt-0.5">
@@ -439,7 +439,7 @@ function InsightsStrip({ prefs, stateCode }) {
           <DollarSign className="w-4 h-4 text-terracotta" />
           <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Est. take-home (last stub)</p>
         </div>
-        <p className="mt-1 text-xl font-semibold text-white nums">
+        <p className="mt-1 text-xl font-heavy text-white nums">
           {take ? `$${take.net.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}
         </p>
         <p className="text-xs text-slate-400 mt-0.5">
@@ -456,7 +456,7 @@ function InsightsStrip({ prefs, stateCode }) {
           <Bell className={`w-4 h-4 ${activeAnomalies > 0 ? 'text-amber-300' : 'text-terracotta'}`} />
           <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Alerts</p>
         </div>
-        <p className="mt-1 text-xl font-semibold text-white nums">
+        <p className="mt-1 text-xl font-heavy text-white nums">
           {activeAnomalies}
         </p>
         <p className="text-xs text-slate-400 mt-0.5">
@@ -486,7 +486,7 @@ function StatCard({ icon, label, value, highlight, accent }) {
         {icon}
         <span className="text-xs uppercase tracking-wider">{label}</span>
       </div>
-      <div className={`text-xl font-bold ${
+      <div className={`text-xl font-heavy nums ${
         highlight ? 'text-red-400' : accent ? 'text-green-400' : 'text-white'
       }`}>
         {value}
@@ -608,7 +608,7 @@ function ProjectedCard({ label, value }) {
         <CalendarClock className="w-4 h-4" />
         <span className="text-xs uppercase tracking-wider">{label}</span>
       </div>
-      <div className="text-xl font-bold text-amber-200">{value}</div>
+      <div className="text-xl font-heavy text-amber-200 nums">{value}</div>
     </div>
   )
 }
@@ -668,7 +668,7 @@ function OrgStat({ label, value, tone, compact }) {
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
       <p className="text-[10px] font-medium text-slate-500 uppercase tracking-[0.14em]">{label}</p>
-      <p className={`mt-1 ${compact ? 'text-sm font-medium' : 'text-xl font-bold'} ${color} truncate`}>{value}</p>
+      <p className={`mt-1 ${compact ? 'text-sm font-medium' : 'text-xl font-heavy nums'} ${color} truncate`}>{value}</p>
     </div>
   )
 }

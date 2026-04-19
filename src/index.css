@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Brand font faces — self-hosted from /fonts/
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Circular';
+  src: url('/fonts/circular-medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Arial Black';
+  src: url('/fonts/arial_black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OCR-B';
+  src: url('/fonts/OCR-B.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   /* Off-black warm slate, never pure #000 */
   --color-slate-950: #0a0b10;
@@ -26,10 +54,11 @@
   --color-amber-500: #f59e0b;
   --color-amber-400: #fbbf24;
 
-  /* Typography: Geist sans, Newsreader serif accents, Geist Mono numerals */
-  --font-sans: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+  /* Typography */
+  --font-sans: 'Circular', 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Newsreader', 'Georgia', serif;
-  --font-mono: 'Geist Mono', 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
+  --font-mono: 'OCR-B', 'Geist Mono', 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
+  --font-heavy: 'Arial Black', 'Arial Bold', Arial, sans-serif;
 
   /* Easing tokens — taste-skill recommendations, never bounce/elastic */
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
@@ -88,6 +117,12 @@ a[href] { cursor: pointer; }
 .nums,
 .font-mono {
   font-variant-numeric: tabular-nums;
+}
+
+.font-heavy {
+  font-family: var(--font-heavy);
+  font-weight: 900;
+  letter-spacing: -0.025em;
 }
 
 /* Selection */

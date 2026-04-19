@@ -85,7 +85,7 @@ export default function Pricing() {
             <Shield className="w-4 h-4" />
             <span>Pricing</span>
           </div>
-          <h1 className="mt-4 text-3xl sm:text-5xl font-semibold text-white tracking-[-0.025em] text-balance">
+          <h1 className="mt-4 text-3xl sm:text-5xl font-heavy text-white tracking-[-0.025em] text-balance">
             Start with a{' '}
             <span className="font-display text-terracotta">one-time audit</span>.
           </h1>
@@ -138,7 +138,7 @@ export default function Pricing() {
               <div className="md:col-span-5">
                 <div className="rounded-2xl border border-slate-700/80 bg-slate-950/70 p-5">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-5xl font-semibold text-white nums tracking-tight">${DEEP_AUDIT_ONE_TIME_USD}</span>
+                    <span className="text-5xl font-heavy text-white nums tracking-tight">${DEEP_AUDIT_ONE_TIME_USD}</span>
                     <span className="text-sm text-slate-400">one-time</span>
                   </div>
                   <p className="mt-1 text-[11px] text-slate-500">
@@ -308,7 +308,7 @@ function TierCard({ tier, cadence, currentTier, onActivate }) {
       <p className="text-xs text-slate-400 mt-1">{tier.tagline}</p>
 
       <div className="mt-3 flex items-baseline gap-1 min-h-[44px]">
-        <span className="text-4xl font-semibold text-white tracking-tight nums">{priceTop}</span>
+        <span className="text-4xl font-heavy text-white tracking-tight nums">{priceTop}</span>
         {cadenceLabel && <span className="text-slate-500 text-sm">{cadenceLabel}</span>}
       </div>
       {subPrice && <p className="text-[11px] text-slate-500">{subPrice}</p>}
