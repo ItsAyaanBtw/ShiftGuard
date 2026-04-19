@@ -23,6 +23,8 @@
  *   .env.local to upgrade to your own key without touching code.
  */
 
+import { redactSecrets } from './sanitize'
+
 const OCR_ENDPOINT = 'https://api.ocr.space/parse/image'
 
 function getApiKey() {
@@ -127,10 +129,12 @@ export async function extractTextFromImage(input, mediaType = 'image/jpeg', sign
   }
 
   if (data?.IsErroredOnProcessing) {
-    const msg = Array.isArray(data.ErrorMessage)
+    const raw = Array.isArray(data.ErrorMessage)
       ? data.ErrorMessage.join('; ')
       : String(data.ErrorMessage || 'OCR failed')
-    // Surface the most common failure modes in plain language.
+    // Scrub any key fragments OCR.space might echo back before we surface the
+    // message to the user or logs.
+    const msg = redactSecrets(raw)
     if (/API Key/i.test(msg)) {
       throw new Error('OCR API key was rejected. Set VITE_OCR_SPACE_API_KEY in .env.local and restart the dev server.')
     }

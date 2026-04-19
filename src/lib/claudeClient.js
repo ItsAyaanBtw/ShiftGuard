@@ -10,6 +10,8 @@
  * Callers never have to know which path was used.
  */
 
+import { redactSecrets, normalizeOcrText } from './sanitize'
+
 const DIRECT_KEY = (import.meta.env.VITE_ANTHROPIC_API_KEY || '').trim()
 const MODEL = (import.meta.env.VITE_ANTHROPIC_MODEL || 'claude-sonnet-4-6-20250514').trim()
 const TIMEOUT_MS = 60_000
@@ -107,12 +109,12 @@ export async function callClaude(requestBody, { retries = 1 } = {}) {
       clearTimeout(timer)
 
       if (!res.ok) {
-        const errText = await res.text().catch(() => '')
+        const errText = redactSecrets(await res.text().catch(() => ''))
         let msg = `API error ${res.status}`
         if (errText) {
           try {
             const j = JSON.parse(errText)
-            const anthropicMsg = j?.error?.message || (typeof j?.error === 'string' ? j.error : '')
+            const anthropicMsg = redactSecrets(j?.error?.message || (typeof j?.error === 'string' ? j.error : ''))
             // Any variant of "missing / invalid key" collapses to one clean user-facing string.
             if (
               j.type === 'config' ||
@@ -131,7 +133,7 @@ export async function callClaude(requestBody, { retries = 1 } = {}) {
             msg += `: ${errText.slice(0, 200)}`
           }
         }
-        throw new Error(msg)
+        throw new Error(redactSecrets(msg))
       }
 
       const data = await res.json()
@@ -285,7 +287,10 @@ const TIMESHEET_TOOL = {
  * paystubs and dramatically cuts token cost per parse.
  */
 export async function parsePaystubFromText(ocrText) {
-  const text = String(ocrText || '').trim()
+  // Bound + scrub the OCR output before we ship it to Claude. OCR can return
+  // megabytes on multi-page PDFs; we cap at 12k chars and strip control /
+  // bidi chars so nothing sneaky can slip into the system prompt.
+  const text = normalizeOcrText(ocrText).trim()
   if (!text) throw new Error('No OCR text to parse.')
 
   const systemPrompt =

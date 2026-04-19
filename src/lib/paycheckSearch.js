@@ -1,5 +1,6 @@
 import { getPaystubVault } from './storage'
 import { callClaudeText } from './claudeText'
+import { normalizePromptText, redactSecrets } from './sanitize'
 
 /**
  * Lightweight RAG over the user's saved paystubs. The vault is small (capped at 24
@@ -206,7 +207,11 @@ function localAnswer(prompt, matches) {
   return lines.join(' ')
 }
 
-export async function askPaychecks(prompt) {
+export async function askPaychecks(rawPrompt) {
+  // Clamp and scrub the user's question before we use it for ranking or send
+  // it to Claude. Caps at 500 chars, strips bidi overrides + control chars,
+  // removes literal API-key-shaped substrings if any accidentally get pasted.
+  const prompt = redactSecrets(normalizePromptText(rawPrompt))
   const { matches, total, anyMatched } = selectMatches(prompt)
   if (!matches.length) {
     return {

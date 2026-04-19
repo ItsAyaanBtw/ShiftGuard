@@ -684,9 +684,14 @@ function DiscrepancyBanner({ analysis, prefs }) {
 
   // In organizer mode reframe the discrepancy as a member case, not "your paycheck".
   const organizerMode = !!prefs?.organizerMode
-  const memberLabel = organizerMode ? 'Luz Herrera · Starlight Home Care' : `last ${employer} paystub`
+  // In organizer mode, reference the represented member directly instead of the
+  // active user. Falls back to the employer name on the stub if the member name
+  // hasn't been set for this scenario yet.
+  const memberLabel = organizerMode
+    ? 'Jasmine Okonkwo, RN · Hermann Memorial ICU'
+    : `last ${employer} paystub`
   const body = organizerMode
-    ? `Member case ${memberLabel} is short about $${owed.toFixed(0)} this period. Open the comparison to see which CBA line isn\u2019t showing on the stub.`
+    ? `Member case ${memberLabel} is short about $${owed.toFixed(0)} this period. Open the comparison to see which CBA line isn't showing on the stub.`
     : `Your last ${employer} paystub looks about $${owed.toFixed(0)} short of what your logged hours support. Review the line-by-line comparison.`
 
   return (

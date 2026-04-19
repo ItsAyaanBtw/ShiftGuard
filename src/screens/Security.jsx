@@ -102,7 +102,7 @@ export default function Security() {
           >
             <List items={[
               'Your password is run through PBKDF2-SHA256 (200,000 iterations) with a per-account 32-byte salt to derive the key.',
-              'The key lives in the tab\u2019s sessionStorage only. Closing the tab erases it.',
+              "The key lives in the tab's sessionStorage only. Closing the tab erases it.",
               'We never upload your password, the derived key, or your encrypted data.',
               'Guest mode uses a random 32-byte device key stored locally. Still encrypted; upgrade to an account for passphrase protection.',
             ]} />
@@ -111,7 +111,7 @@ export default function Security() {
           <Card
             icon={<Server className="w-4 h-4" />}
             title="No server storing your data"
-            body="We run no backend database. Your data never leaves your device except for one opt-in feature: document OCR, which sends the paystub image to Anthropic\u2019s Claude API only at the moment you upload."
+            body="We run no backend database. Your data never leaves your device except for one opt-in feature: document parsing, which sends paystub text to OCR.space and Anthropic's Claude API only at the moment you upload."
           >
             <List items={[
               'Claude calls are gated to the moment you press "Parse" and receive no history or identifying metadata.',
@@ -126,23 +126,23 @@ export default function Security() {
             body="Realistic threats we actively block:"
           >
             <List items={[
-              'Shared machines: a co-worker on the same laptop can\u2019t read your paystubs without your password.',
-              'Browser extensions that read storage but don\u2019t inject scripts.',
+              "Shared machines: a co-worker on the same laptop can't read your paystubs without your password.",
+              "Browser extensions that read storage but don't inject scripts.",
               'File-system forensics on a lost or stolen device.',
-              'Cross-account leaks: each account has a separate scope; switching accounts re-bootstraps the cache with that account\u2019s key.',
+              "Cross-account leaks: each account has a separate scope; switching accounts re-bootstraps the cache with that account's key.",
             ]} />
           </Card>
 
           <Card
             icon={<Eye className="w-4 h-4" />}
-            title="What we don\u2019t protect against"
+            title="What we don't protect against"
             body="We are loud about this so you can choose."
           >
             <List items={[
-              'A malicious script running inside ShiftGuard\u2019s origin. Defense is strict CSP and no untrusted innerHTML, not our crypto.',
+              "A malicious script running inside ShiftGuard's origin. Defense is strict CSP and no untrusted innerHTML, not our crypto.",
               'A compromised device. Someone who can type your password has everything.',
               'Screenshots or clipboard snooping by other apps on your OS.',
-              'Anthropic\u2019s handling of a document you explicitly sent them for OCR. Their policy applies; we don\u2019t resend.',
+              "Anthropic's or OCR.space's handling of a document you explicitly sent them. Their policies apply; we don't resend.",
             ]} />
           </Card>
         </section>

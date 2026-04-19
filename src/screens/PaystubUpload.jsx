@@ -13,6 +13,7 @@ import {
   saveStubToVault, getPaystubVault, getUserPreferences, pushAnomaly,
 } from '../lib/storage'
 import { detectAnomalies } from '../lib/anomalies'
+import { redactSecrets, logSafe } from '../lib/sanitize'
 
 const STEPS = {
   UPLOAD: 'upload',
@@ -92,9 +93,9 @@ export default function PaystubUpload() {
       setParseStage('map')
       result = await parsePaystubFromText(ocrText)
     } catch (ocrErr) {
-      const ocrMsg = ocrErr?.message || String(ocrErr)
+      const ocrMsg = redactSecrets(ocrErr?.message || String(ocrErr))
       const configIssue = /configured|x-api-key|ANTHROPIC/i.test(ocrMsg)
-      console.warn('[paystub] OCR+Claude path failed, falling back to Vision.', ocrMsg)
+      logSafe('[paystub] OCR+Claude path failed, falling back to Vision.', ocrMsg)
       if (configIssue) {
         setErrorMsg(ocrMsg)
         setStep(STEPS.ERROR)
@@ -106,7 +107,7 @@ export default function PaystubUpload() {
         const base64 = await fileToBase64(file)
         result = await parsePaystub(base64, mediaType)
       } catch (visionErr) {
-        const msg = visionErr?.message || String(visionErr)
+        const msg = redactSecrets(visionErr?.message || String(visionErr))
         if (/configured|x-api-key|ANTHROPIC/i.test(msg)) {
           setErrorMsg(msg)
         } else if (/API error|timed out|connect|OCR/i.test(msg)) {

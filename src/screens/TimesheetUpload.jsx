@@ -7,6 +7,7 @@ import {
 import Header from '../components/Header'
 import Disclaimer from '../components/Disclaimer'
 import { parseTimesheet } from '../lib/claudeClient'
+import { redactSecrets, logSafe } from '../lib/sanitize'
 import {
   getShifts, saveShifts, getTimesheetRecord, saveTimesheetRecord,
 } from '../lib/storage'
@@ -99,8 +100,9 @@ export default function TimesheetUpload() {
       setReconciliation(r)
       setStep(STEPS.REVIEW)
     } catch (err) {
-      console.error('Timesheet parse failed:', err)
-      setErrorMsg(err?.message || 'Could not read this document. Try a clearer photo.')
+      const msg = redactSecrets(err?.message || 'Could not read this document. Try a clearer photo.')
+      logSafe('Timesheet parse failed', err)
+      setErrorMsg(msg)
       setStep(STEPS.ERROR)
     }
   }, [])

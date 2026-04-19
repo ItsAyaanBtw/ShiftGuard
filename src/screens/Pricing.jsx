@@ -242,17 +242,17 @@ function OrgPlanCard() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 max-w-2xl">
             <p className="text-[10px] font-semibold text-terracotta uppercase tracking-[0.18em]">
-              For labor unions and worker centers
+              For healthcare labor organizations
             </p>
             <h3 className="mt-2 text-2xl sm:text-3xl font-semibold text-white tracking-tight">
-              Give every member a pay-check audit.
+              Give every nurse a pay-check audit.
             </h3>
             <p className="mt-3 text-slate-400 leading-relaxed">
-              One dashboard for your organizers, one account per member. Paystubs and
-              timesheets stay on each member&rsquo;s device unless they share them with
-              your staff. Run CBA rules alongside federal and state rules, so a missed
-              travel-time line or a 7th-day premium shows up as a flagged case instead of
-              a complaint that arrives six months late.
+              One dashboard for your organizers, one account per represented nurse. Paystubs and
+              timesheets stay on each member's device unless they share them with
+              your staff. ShiftGuard runs your CBA alongside federal and state rules, so a
+              missed night differential, weekend premium, or charge-nurse rate shows up as a
+              flagged case instead of a grievance that arrives six months late.
             </p>
           </div>
           <a
@@ -265,13 +265,15 @@ function OrgPlanCard() {
         </div>
 
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <OrgFeature title="Seat-based pricing" body="Flat monthly rate per member seat. Unlimited organizer seats for your staff." />
-          <OrgFeature title="Contract-aware rules" body="Upload your CBA and ShiftGuard will check the stub against contract premiums, not just federal and state." />
-          <OrgFeature title="Exports for legal" body="CSV of flagged paystubs with citations. Handoff to a rep counsel is one download." />
+          <OrgFeature title="Seat-based pricing" body="Flat monthly rate per represented nurse. Unlimited organizer seats for your staff." />
+          <OrgFeature title="CBA-aware rule engine" body="Upload your hospital contract and ShiftGuard checks every stub against night, weekend, charge, preceptor, and holiday premiums." />
+          <OrgFeature title="Exports for legal" body="CSV of flagged paystubs with citations. Hand off to rep counsel or the labor board in one download." />
         </div>
 
         <p className="mt-5 text-[11px] text-slate-500 leading-relaxed">
-          Not sold to employers. We only work with worker-side organizations. Pilot pricing available for locals under 5,000 members and for worker centers.
+          Not sold to employers. We only work with nurse-side organizations: NNU, SEIU healthcare locals,
+          state nurses associations, and hospital-specific bargaining units. Pilot pricing available for
+          units under 5,000 members.
         </p>
       </div>
     </ScrollReveal>
