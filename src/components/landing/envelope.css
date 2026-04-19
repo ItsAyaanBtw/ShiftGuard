@@ -19,7 +19,6 @@
   --env-sans: 'Inter', system-ui, sans-serif;
   --env-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  background: var(--paper-bg);
   color: var(--paper-fg);
   font-family: var(--env-sans);
   min-height: 100vh;
@@ -31,13 +30,6 @@
 .env-landing .font-serif { font-family: var(--env-serif); letter-spacing: -0.02em; }
 .env-landing .font-italic { font-style: italic; }
 .env-landing .font-mono { font-family: var(--env-mono); font-variant-numeric: tabular-nums; }
-
-.env-grid-bg {
-  background-image:
-    linear-gradient(to right, var(--paper-grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--paper-grid-line) 1px, transparent 1px);
-  background-size: 56px 56px;
-}
 
 .env-token {
   display: inline-flex;

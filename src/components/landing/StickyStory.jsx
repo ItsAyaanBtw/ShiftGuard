@@ -9,11 +9,6 @@ export default function StickyStory() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
 
   // Background warms from paper → warm paper as we near sealed
-  const bg = useTransform(
-    scrollYProgress,
-    [0, 0.6, 1],
-    ["oklch(0.965 0.012 85)", "oklch(0.95 0.016 82)", "oklch(0.935 0.02 80)"]
-  );
 
   // Captions
   const cap1 = useTransform(scrollYProgress, [0.02, 0.08, 0.24, 0.3], [0, 1, 1, 0]);
@@ -23,8 +18,8 @@ export default function StickyStory() {
   return (
     <section ref={ref} style={{ position: "relative", height: "500vh" }}>
       <motion.div
-        style={{ background: bg }}
-        className="env-grid-bg"
+        style={{ height: "100%" }}
+        
         // sticky stage
       >
         <div

@@ -303,3 +303,19 @@ a[href] { cursor: pointer; }
   .sg-float, .sg-drift, .sg-shimmer, .sg-breath::after { animation: none !important; }
   html { scroll-behavior: auto; }
 }
+
+/* ==========================================================================
+   Envelope Landing Overrides (Global)
+   ========================================================================== */
+body:has(.env-landing) {
+  background-color: oklch(0.965 0.012 85) !important;
+  background-image:
+    linear-gradient(to right, oklch(0.22 0.015 60 / 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.22 0.015 60 / 0.04) 1px, transparent 1px) !important;
+  background-size: 56px 56px !important;
+  background-attachment: fixed !important;
+}
+
+.dark body:has(.env-landing) {
+  background-image: none !important;
+}
