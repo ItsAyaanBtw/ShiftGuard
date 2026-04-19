@@ -326,14 +326,25 @@ function IntegrationCard({ adapter, record, onSaved }) {
                 placeholder="date,start,end,break,tips,employer\n2026-04-10,09:00,17:30,30,0,Target"
                 className="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-terracotta"
               />
-              <SaveRow
-                onSave={() => {
-                  saveIntegration(adapter.id, { name: adapter.name })
-                  syncNow()
-                }}
-                busy={busy}
-                label="Import CSV"
-              />
+              <div className="flex items-center gap-2">
+                <SaveRow
+                  onSave={() => {
+                    saveIntegration(adapter.id, { name: adapter.name })
+                    syncNow()
+                  }}
+                  busy={busy}
+                  label="Import CSV"
+                />
+                {csvText && (
+                  <button
+                    type="button"
+                    onClick={() => setCsvText('')}
+                    className="text-[11px] text-slate-400 hover:text-red-300 px-2 py-1.5 rounded-md border border-slate-800 hover:border-red-500/50"
+                  >
+                    Undo upload
+                  </button>
+                )}
+              </div>
             </>
           )}
 
@@ -367,14 +378,25 @@ function IntegrationCard({ adapter, record, onSaved }) {
                   />
                 </Field>
               </div>
-              <SaveRow
-                onSave={() => {
-                  saveIntegration(adapter.id, { name: adapter.name })
-                  syncNow()
-                }}
-                busy={busy}
-                label="Import timeline"
-              />
+              <div className="flex items-center gap-2">
+                <SaveRow
+                  onSave={() => {
+                    saveIntegration(adapter.id, { name: adapter.name })
+                    syncNow()
+                  }}
+                  busy={busy}
+                  label="Import timeline"
+                />
+                {jsonText && (
+                  <button
+                    type="button"
+                    onClick={() => setJsonText('')}
+                    className="text-[11px] text-slate-400 hover:text-red-300 px-2 py-1.5 rounded-md border border-slate-800 hover:border-red-500/50"
+                  >
+                    Undo upload
+                  </button>
+                )}
+              </div>
             </>
           )}
         </div>

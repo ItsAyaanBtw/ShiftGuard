@@ -16,6 +16,9 @@ import {
 import {
   getPermission as getNotificationPermission, requestPermission as requestNotifPermission,
 } from '../lib/notifications'
+import {
+  getAccountSettings, saveAccountSettings, isLoggedIn, getActiveAccount,
+} from '../lib/accounts'
 
 /**
  * Geofence manager. Lets a worker drop pins on their worksites so ShiftGuard can nudge
@@ -256,18 +259,20 @@ export default function GeofenceScreen() {
           </div>
 
           <div className="md:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 flex flex-col">
-            <h2 className="text-sm font-semibold text-white">Runtime</h2>
+            <h2 className="text-sm font-semibold text-white">Runtime &amp; notifications</h2>
             <p className="text-xs text-slate-400 leading-relaxed mt-1">
-              The watcher runs while this tab is open. Close the tab and tracking stops, which keeps
-              battery and privacy costs down. Allow notifications to hear the reminders without watching
-              this screen.
+              Watcher runs while this tab is open. Notification settings are tied to your account so
+              you can mute reminders without losing the fences themselves.
             </p>
 
             <div className="mt-4 space-y-2 text-xs">
+              <Row label="Account" value={isLoggedIn() ? getActiveAccount()?.displayName || 'signed in' : 'guest'} ok={isLoggedIn()} />
               <Row label="Geolocation" value={geoSupported ? 'Supported' : 'Unavailable'} ok={geoSupported} />
               <Row label="Notifications" value={notifPermission} ok={notifPermission === 'granted'} />
               <Row label="Fences configured" value={fences.length} ok={fences.length > 0} />
             </div>
+
+            <NotificationToggles />
 
             <div className="mt-4 flex flex-wrap gap-2">
               <button
@@ -335,6 +340,72 @@ export default function GeofenceScreen() {
         </div>
       </main>
     </div>
+  )
+}
+
+function NotificationToggles() {
+  const settings = getAccountSettings()
+  const notifications = settings.notifications || { geofence: true, dailySummary: true }
+  const autoTrack = settings.autoTrackShifts !== false
+
+  function toggle(patch) {
+    const next = {
+      ...settings,
+      notifications: { ...notifications, ...(patch.notifications || {}) },
+      ...(patch.autoTrackShifts != null ? { autoTrackShifts: patch.autoTrackShifts } : {}),
+    }
+    saveAccountSettings(next)
+  }
+
+  return (
+    <fieldset className="mt-5 rounded-xl border border-slate-800 bg-slate-950/40 p-3 space-y-2">
+      <legend className="text-[10px] uppercase tracking-[0.16em] text-slate-500 px-1">
+        Notification preferences
+      </legend>
+      <ToggleRow
+        label="Geofence reminders (enter / leave)"
+        on={notifications.geofence !== false}
+        onChange={v => toggle({ notifications: { geofence: v } })}
+      />
+      <ToggleRow
+        label="Daily summary in leave reminders"
+        on={notifications.dailySummary !== false}
+        onChange={v => toggle({ notifications: { dailySummary: v } })}
+      />
+      <ToggleRow
+        label="Auto-log shift when you leave a fence"
+        on={autoTrack}
+        onChange={v => toggle({ autoTrackShifts: v })}
+      />
+      {!isLoggedIn() && (
+        <p className="text-[10px] text-amber-300 mt-1">
+          You&rsquo;re a guest. Settings save locally; sign in to keep them across devices on this browser.
+        </p>
+      )}
+    </fieldset>
+  )
+}
+
+function ToggleRow({ label, on, onChange }) {
+  return (
+    <label className="flex items-center justify-between gap-3 text-xs cursor-pointer">
+      <span className="text-slate-200">{label}</span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        onClick={() => onChange(!on)}
+        className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${
+          on ? 'bg-terracotta' : 'bg-slate-700'
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+            on ? 'translate-x-4' : 'translate-x-0.5'
+          }`}
+        />
+      </button>
+    </label>
   )
 }
 

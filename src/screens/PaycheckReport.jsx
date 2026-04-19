@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Printer, AlertTriangle, CheckCircle2, ExternalLink,
-  Mail, Scale, ArrowRight,
+  Wrench, Scale, ArrowRight,
 } from 'lucide-react'
 import Header from '../components/Header'
 import Disclaimer from '../components/Disclaimer'
@@ -147,7 +147,7 @@ export default function PaycheckReport() {
         </div>
 
         <div className="print:hidden mt-8 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => window.print()}
@@ -158,19 +158,10 @@ export default function PaycheckReport() {
             </button>
             <Link
               to="/tools"
-              state={{ open: 'hremail' }}
-              className="flex items-center justify-center gap-2 py-3.5 rounded-xl border border-terracotta/40 text-terracotta hover:bg-terracotta/10 transition-colors text-sm font-semibold"
-            >
-              <Mail className="w-4 h-4" />
-              Draft inquiry email
-            </Link>
-            <Link
-              to="/tools"
-              state={{ open: 'retro' }}
               className="flex items-center justify-center gap-2 py-3.5 rounded-xl border border-slate-700 text-slate-200 hover:bg-slate-800 transition-colors text-sm font-medium"
             >
-              <Scale className="w-4 h-4" />
-              Retro pay estimate
+              <Wrench className="w-4 h-4" />
+              Open the toolkit
             </Link>
           </div>
           <p className="text-[11px] text-slate-600 text-center">
@@ -192,7 +183,7 @@ export default function PaycheckReport() {
                 Reference: {retro.citation}. Estimate only, not legal advice. Check with your state labor department before acting on this figure.
               </p>
               <Link
-                to="/tools"
+                to="/history"
                 className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-terracotta hover:text-terracotta-light"
               >
                 See the full breakdown

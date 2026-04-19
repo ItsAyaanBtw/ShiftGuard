@@ -1,11 +1,12 @@
 import { createElement, useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Shield, Clock, Camera, GitCompareArrows, FileText, BarChart3, CircleDollarSign,
-  ShieldCheck, Wrench, Plug, Menu, X,
+  ShieldCheck, Wrench, Plug, LogIn, LogOut, User, Menu, X,
 } from 'lucide-react'
 import WorkflowProgress from './WorkflowProgress'
 import ScrollProgress from './motion/ScrollProgress'
+import { getActiveAccount, isLoggedIn, logout } from '../lib/accounts'
 
 /**
  * Desktop shows the core workflow plus Tools / Dashboard / Pricing.
@@ -36,12 +37,30 @@ const MOBILE_NAV = [
 
 export default function Header() {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [account, setAccount] = useState(() => getActiveAccount())
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setMobileOpen(false))
     return () => cancelAnimationFrame(id)
   }, [pathname])
+
+  useEffect(() => {
+    const refresh = () => setAccount(getActiveAccount())
+    window.addEventListener('shiftguard-account-changed', refresh)
+    return () => window.removeEventListener('shiftguard-account-changed', refresh)
+  }, [])
+
+  const loggedIn = isLoggedIn()
+  function handleAuthClick() {
+    if (loggedIn) {
+      logout()
+      navigate('/auth')
+    } else {
+      navigate(`/auth?next=${encodeURIComponent(pathname)}`)
+    }
+  }
 
   useEffect(() => {
     if (!mobileOpen) return
@@ -88,6 +107,20 @@ export default function Header() {
             })}
           </nav>
 
+          {/* Account chip — desktop only */}
+          <button
+            type="button"
+            onClick={handleAuthClick}
+            className="hidden lg:inline-flex items-center gap-1.5 ml-1 shrink-0 text-[12px] font-medium text-slate-200 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 bg-slate-900/40"
+            title={loggedIn ? `${account?.email || account?.displayName} (sign out)` : 'Sign in or create an account'}
+          >
+            {loggedIn ? <User className="w-3.5 h-3.5 text-terracotta" /> : <LogIn className="w-3.5 h-3.5 text-terracotta" />}
+            <span className="max-w-[10rem] truncate">
+              {loggedIn ? (account?.displayName || 'Account') : 'Sign in'}
+            </span>
+            {loggedIn && <LogOut className="w-3 h-3 text-slate-500 ml-0.5" />}
+          </button>
+
           <button
             type="button"
             className="lg:hidden flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-slate-200 hover:bg-slate-800 border border-slate-700/80"
@@ -129,6 +162,16 @@ export default function Header() {
                     </li>
                   )
                 })}
+                <li className="border-t border-slate-800 mt-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleAuthClick}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium min-h-[48px] text-slate-200 hover:bg-slate-800"
+                  >
+                    {loggedIn ? <LogOut className="w-5 h-5 text-terracotta shrink-0" /> : <LogIn className="w-5 h-5 text-terracotta shrink-0" />}
+                    <span>{loggedIn ? `Sign out (${account?.displayName || account?.email})` : 'Sign in or create account'}</span>
+                  </button>
+                </li>
               </ul>
             </nav>
           </>

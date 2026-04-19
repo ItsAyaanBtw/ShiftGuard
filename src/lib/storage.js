@@ -1,4 +1,14 @@
 import { normalizeAnalysis } from './analysisUtils'
+import { getActiveScope } from './accounts'
+
+/**
+ * Storage keys are namespaced per-account so signing in/out swaps the entire ShiftGuard
+ * data set transparently. The key constants below are stable identifiers; the active
+ * scope prefix from `accounts.js` is prepended at read/write time.
+ */
+function scoped(key) {
+  return `${getActiveScope()}${key}`
+}
 
 const KEYS = {
   SHIFTS: 'shiftguard_shifts',
@@ -85,7 +95,7 @@ function notifyDataChanged() {
 
 function read(key) {
   try {
-    const raw = localStorage.getItem(key)
+    const raw = localStorage.getItem(scoped(key))
     return raw ? JSON.parse(raw) : null
   } catch {
     return null
@@ -94,7 +104,7 @@ function read(key) {
 
 function write(key, data) {
   try {
-    localStorage.setItem(key, JSON.stringify(data))
+    localStorage.setItem(scoped(key), JSON.stringify(data))
     notifyDataChanged()
   } catch (err) {
     console.error('[ShiftGuard] Storage write failed (private mode, quota, or blocked).', err)
@@ -102,7 +112,7 @@ function write(key, data) {
 }
 
 function remove(key) {
-  localStorage.removeItem(key)
+  localStorage.removeItem(scoped(key))
   notifyDataChanged()
 }
 
@@ -480,7 +490,7 @@ export function getWorkflowProgress() {
 
 export function clearAll() {
   for (const key of Object.values(KEYS)) {
-    localStorage.removeItem(key)
+    localStorage.removeItem(scoped(key))
   }
   notifyDataChanged()
 }

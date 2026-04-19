@@ -4,8 +4,11 @@ import {
   saveGeofenceState,
   pushAnomaly,
   getPaystub,
+  getShifts,
+  saveShifts,
 } from './storage'
 import { notify, isSupported as notificationsSupported, getPermission as getNotificationPermission } from './notifications'
+import { getAccountSettings } from './accounts'
 
 /**
  * Client-side geofence runtime.
@@ -122,9 +125,13 @@ export function evaluateFences(position, { now = Date.now() } = {}) {
       || (!inside && fence.remindOnLeave !== false)
     if (shouldNotify && sinceLastNotify > NOTIFICATION_DEBOUNCE_MS) {
       state[fence.id].lastNotifiedAt = now
-      const event = { fence, direction: inside ? 'enter' : 'leave', distance }
-      // When leaving and we have a known enter time for this fence, attach a rough
-      // time-on-site summary so the notification is actually useful.
+      const event = {
+        fence,
+        direction: inside ? 'enter' : 'leave',
+        distance,
+        enterIso: !inside ? prev.since : state[fence.id].since,
+        leaveIso: !inside ? state[fence.id].since : null,
+      }
       if (!inside && prev.since) {
         event.summary = summarizeShift({ enterIso: prev.since, leaveIso: state[fence.id].since })
       }
@@ -146,12 +153,76 @@ function summarizeShift({ enterIso, leaveIso }) {
   const paystub = getPaystub()
   const rate = Number(paystub?.hourly_rate) || 0
   const estimatedEarned = rate > 0 ? hours * rate : null
+
+  // Daily total: sum hours from any shifts already logged for the calendar day plus the
+  // shift that just ended. Lets us include "you worked X hours today, took home about $Y"
+  // in the leave notification when the user works split shifts.
+  const dayKey = leave.toISOString().slice(0, 10)
+  const dayShifts = getShifts().filter(s => s.date === dayKey)
+  let priorMinutesToday = 0
+  for (const s of dayShifts) {
+    const [h1, m1] = (s.clockIn || '0:0').split(':').map(Number)
+    const [h2, m2] = (s.clockOut || '0:0').split(':').map(Number)
+    if (![h1, m1, h2, m2].every(Number.isFinite)) continue
+    const start = h1 * 60 + m1
+    const end = h2 * 60 + m2
+    let span = end - start
+    if (span <= 0) span += 24 * 60 // overnight
+    span -= Math.max(0, Number(s.breakMinutes) || 0)
+    priorMinutesToday += Math.max(0, span)
+  }
+  const totalMinutesToday = priorMinutesToday + minutes
+  const totalHoursToday = totalMinutesToday / 60
+  const dayEarnedTotal = rate > 0 ? totalHoursToday * rate : null
+
   return {
     hours: Number(hours.toFixed(2)),
     minutes,
     rate,
     estimatedEarned: estimatedEarned != null ? Number(estimatedEarned.toFixed(2)) : null,
+    totalHoursToday: Number(totalHoursToday.toFixed(2)),
+    dayEarnedTotal: dayEarnedTotal != null ? Number(dayEarnedTotal.toFixed(2)) : null,
   }
+}
+
+/**
+ * Append a shift record reconstructed from the geofence enter/leave timestamps. Idempotent
+ * by externalId so repeat events for the same window don't duplicate the entry.
+ */
+function autoCreateShiftFromGeofence({ fence, summary, enterIso, leaveIso }) {
+  if (!summary || summary.minutes < 30) return null
+  const enter = new Date(enterIso)
+  const leave = new Date(leaveIso)
+  const dateKey = enter.toISOString().slice(0, 10)
+  const externalId = `geofence-${fence.id}-${enterIso}`
+  const shifts = getShifts()
+  if (shifts.some(s => s.externalId === externalId)) return null
+
+  const draft = {
+    id: typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `shift-${Date.now()}`,
+    date: dateKey,
+    clockIn: enter.toTimeString().slice(0, 5),
+    clockOut: leave.toTimeString().slice(0, 5),
+    breakMinutes: 0,
+    tips: 0,
+    flaggedOT: false,
+    shiftType: 'day',
+    isWeekend: [0, 6].includes(enter.getDay()),
+    isHoliday: false,
+    chargeNurse: false,
+    preceptor: false,
+    onCallHours: 0,
+    milesDriven: 0,
+    reimbursementRate: 0.67,
+    source: 'geofence',
+    externalId,
+    employer: fence.linkedEmployer || fence.label || '',
+    importLabel: `Auto-logged from ${fence.label || 'geofence'}`,
+  }
+  saveShifts([...shifts, draft])
+  return draft
 }
 
 /**
@@ -190,23 +261,41 @@ export function startGeofenceWatcher({ onChange, onEvent } = {}) {
   }
 }
 
-function fireReminder({ fence, direction, summary }) {
+function fireReminder({ fence, direction, summary, enterIso, leaveIso }) {
   const enter = direction === 'enter'
+  const settings = getAccountSettings()
+  if (!settings?.notifications?.geofence) return
+
+  // Optionally auto-log the shift the user just finished. Only on leave events with
+  // valid summary metadata, and only when the account opted in.
+  let autoShift = null
+  if (!enter && summary && settings.autoTrackShifts !== false) {
+    autoShift = autoCreateShiftFromGeofence({ fence, summary, enterIso, leaveIso })
+  }
+
   const title = enter
     ? `Heading into ${fence.label}?`
-    : `Leaving ${fence.label}?`
+    : `Wrapping up at ${fence.label}?`
 
   let body
   if (enter) {
     body = 'Clock in and log your shift start in ShiftGuard so your paycheck math stays accurate.'
   } else if (summary) {
-    const hrsLabel = summary.hours >= 1
-      ? `${summary.hours.toFixed(2)}h`
-      : `${summary.minutes}m`
+    const hrsLabel = summary.hours >= 1 ? `${summary.hours.toFixed(2)}h` : `${summary.minutes}m`
     const earnBit = summary.estimatedEarned != null
       ? `About $${summary.estimatedEarned.toFixed(2)} earned at $${summary.rate.toFixed(2)}/h.`
       : 'Add your hourly rate in the Pay stub tab to see estimated earnings here.'
-    body = `You were inside the fence for ${hrsLabel}. ${earnBit} Log the clock-out in ShiftGuard.`
+
+    let dailyBit = ''
+    if (settings?.notifications?.dailySummary && summary.totalHoursToday > summary.hours + 0.01) {
+      dailyBit = ` Today\u2019s total: ${summary.totalHoursToday.toFixed(2)}h${
+        summary.dayEarnedTotal != null ? ` (~$${summary.dayEarnedTotal.toFixed(2)})` : ''
+      }.`
+    }
+
+    body = `You were inside for ${hrsLabel}. ${earnBit}${dailyBit}${
+      autoShift ? ' Auto-logged to your shift list.' : ' Log the clock-out when you can.'
+    }`
   } else {
     body = 'Log your clock-out time in ShiftGuard so the next paycheck check catches any shortfalls.'
   }
@@ -230,6 +319,7 @@ function fireReminder({ fence, direction, summary }) {
       type: 'geofence',
       fenceId: fence.id,
       direction,
+      autoShiftId: autoShift?.id || null,
       ...(summary || {}),
     },
   })

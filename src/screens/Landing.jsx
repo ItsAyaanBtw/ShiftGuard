@@ -15,6 +15,7 @@ import { DEMO_SCENARIOS, loadScenario } from '../lib/demoData'
 import {
   WAGE_THEFT_ROI, PRO_MONTHLY_USD,
 } from '../lib/roiConstants'
+import { isLoggedIn } from '../lib/accounts'
 
 /**
  * Marketing surface. Engineered against generic design "tells":
@@ -43,6 +44,10 @@ const MARQUEE_ITEMS = [
 export default function Landing() {
   const navigate = useNavigate()
   const [showDemoPanel, setShowDemoPanel] = useState(false)
+
+  function startUpload() {
+    navigate(isLoggedIn() ? '/upload' : '/auth?next=%2Fupload')
+  }
 
   function handlePickScenario(id) {
     loadScenario(id)
@@ -114,10 +119,10 @@ export default function Landing() {
             <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <MagneticButton
                 strength={14}
-                onClick={() => navigate('/upload')}
+                onClick={startUpload}
                 className="sg-shine-host inline-flex items-center justify-center gap-2 px-6 py-4 bg-terracotta hover:bg-terracotta-dark text-white font-semibold rounded-xl text-base min-h-[52px] shadow-warm transition-colors"
               >
-                Upload a paystub
+                {isLoggedIn() ? 'Upload a paystub' : 'Add your first paystub'}
                 <ArrowRight className="w-4 h-4" />
               </MagneticButton>
 
@@ -362,7 +367,7 @@ export default function Landing() {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <MagneticButton
               strength={14}
-              onClick={() => navigate('/upload')}
+              onClick={startUpload}
               className="sg-shine-host inline-flex items-center gap-2 px-7 py-4 bg-terracotta hover:bg-terracotta-dark text-white font-semibold rounded-xl text-base min-h-[52px] shadow-warm transition-colors"
             >
               Upload a paystub

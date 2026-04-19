@@ -178,7 +178,12 @@ export default function TimesheetUpload() {
           />
         )}
 
-        {step === STEPS.PARSING && <ParsingStep label={fileLabel} />}
+        {step === STEPS.PARSING && (
+          <ParsingStep
+            label={fileLabel}
+            onUndo={() => { setFileLabel(''); setStep(STEPS.INTRO) }}
+          />
+        )}
 
         {step === STEPS.REVIEW && (
           <ReviewStep
@@ -325,12 +330,21 @@ function IntroStep({
 /*  Parsing                                                              */
 /* ------------------------------------------------------------------ */
 
-function ParsingStep({ label }) {
+function ParsingStep({ label, onUndo }) {
   return (
     <div className="text-center py-12">
       <Loader2 className="w-10 h-10 text-terracotta mx-auto mb-4 animate-spin" />
       <p className="text-white font-medium mb-1">Reading {label || 'your time record'}</p>
       <p className="text-slate-500 text-sm">Usually 5 to 12 seconds.</p>
+      {onUndo && (
+        <button
+          type="button"
+          onClick={onUndo}
+          className="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-600"
+        >
+          Undo upload
+        </button>
+      )}
     </div>
   )
 }

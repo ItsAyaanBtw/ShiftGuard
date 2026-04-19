@@ -1,9 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  Wrench, TrendingUp, Plane, Coins, Mail, Scale, ArrowRight,
-  Lock, DollarSign, Sparkles, ShieldCheck, Calculator, CalendarClock,
-  FileText, LineChart,
+  Wrench, TrendingUp, MessagesSquare, Timer, Sparkles, ArrowRight,
+  DollarSign, ShieldCheck, Lock,
 } from 'lucide-react'
 import Header from '../components/Header'
 import Disclaimer from '../components/Disclaimer'
@@ -14,95 +13,49 @@ import {
 import { WAGE_THEFT_ROI, PRO_MONTHLY_USD, PRO_ANNUAL_USD } from '../lib/roiConstants'
 
 import MarketRateTool from '../components/tools/MarketRateTool'
-import PtoValueTool from '../components/tools/PtoValueTool'
-import TravelBlendTool from '../components/tools/TravelBlendTool'
-import RetroPayTool from '../components/tools/RetroPayTool'
-import HrEmailTool from '../components/tools/HrEmailTool'
-import TaxEstimatorTool from '../components/tools/TaxEstimatorTool'
-import NextPaycheckTool from '../components/tools/NextPaycheckTool'
-import PaystubExplainerTool from '../components/tools/PaystubExplainerTool'
-import PaycheckPredictorTool from '../components/tools/PaycheckPredictorTool'
+import AskPaychecksTool from '../components/tools/AskPaychecksTool'
+import OvertimeMultiplierTool from '../components/tools/OvertimeMultiplierTool'
+import WhatIfTool from '../components/tools/WhatIfTool'
 
 /**
- * Tools hub. Paneled layout: left gives a grid of tiles, right renders the selected tool.
- * On small screens the right pane collapses below.
- *
- * Gating is soft for the hackathon: Pro and Premium tiles are clickable but open a paywall
- * pane instead of the tool until `subscriptionTier` is set accordingly.
+ * Tools hub. Trimmed to the four tools the product actually leads on:
+ *   - Am I underpaid (free)
+ *   - Ask your paychecks (Pro, RAG over the on-device vault)
+ *   - Overtime multiplier (free, state-aware)
+ *   - What If (Pro, consolidates the calculators that used to live in their own tiles)
  */
-
 const TOOLS = [
   {
     id: 'market',
     name: 'Am I underpaid?',
     tier: 'free',
     icon: TrendingUp,
-    blurb: 'Your rate vs. BLS OEWS median for your role and state.',
+    blurb: 'Your hourly rate vs. the BLS median for your role and state.',
     component: MarketRateTool,
   },
   {
-    id: 'takehome',
-    name: 'Take-home estimator',
+    id: 'overtime',
+    name: 'Overtime multiplier',
     tier: 'free',
-    icon: Calculator,
-    blurb: 'Gross to net for this paycheck with 2025 brackets.',
-    component: TaxEstimatorTool,
+    icon: Timer,
+    blurb: 'Your state\u2019s real OT rule. Type a week, see what should land in 1.5x and 2x.',
+    component: OvertimeMultiplierTool,
   },
   {
-    id: 'nextpay',
-    name: 'Next paycheck planner',
-    tier: 'free',
-    icon: CalendarClock,
-    blurb: 'When your next paycheck lands and how big it looks.',
-    component: NextPaycheckTool,
-  },
-  {
-    id: 'explainer',
-    name: 'Paystub explainer',
+    id: 'ask',
+    name: 'Ask your paychecks',
     tier: 'pro',
-    icon: FileText,
-    blurb: 'Every line of your last paystub in plain language.',
-    component: PaystubExplainerTool,
+    icon: MessagesSquare,
+    blurb: 'One question, one short assistant call answered from your saved paystubs only.',
+    component: AskPaychecksTool,
   },
   {
-    id: 'predictor',
-    name: 'Paycheck predictor',
+    id: 'whatif',
+    name: 'What if',
     tier: 'pro',
-    icon: LineChart,
-    blurb: 'Project the next 1-4 paychecks from logged shifts + your pay cycle.',
-    component: PaycheckPredictorTool,
-  },
-  {
-    id: 'pto',
-    name: 'PTO value calculator',
-    tier: 'pro',
-    icon: Coins,
-    blurb: 'What your accrued PTO is actually worth in dollars.',
-    component: PtoValueTool,
-  },
-  {
-    id: 'hremail',
-    name: 'Draft an inquiry email',
-    tier: 'pro',
-    icon: Mail,
-    blurb: 'A short, factual message to payroll from your comparison results.',
-    component: HrEmailTool,
-  },
-  {
-    id: 'travel',
-    name: 'Travel nurse rate X-ray',
-    tier: 'pro',
-    icon: Plane,
-    blurb: 'Blended rate vs. GSA caps; flags stipend recharacterization risk.',
-    component: TravelBlendTool,
-  },
-  {
-    id: 'retro',
-    name: 'Retro pay estimate',
-    tier: 'pro',
-    icon: Scale,
-    blurb: 'Potentially owed wages across your history, within state lookback.',
-    component: RetroPayTool,
+    icon: Sparkles,
+    blurb: 'Take-home, next paycheck, monthly projection, and PTO value in one tabbed view.',
+    component: WhatIfTool,
   },
 ]
 
@@ -110,10 +63,8 @@ export default function Tools() {
   const [activeId, setActiveId] = useState('market')
   const navigate = useNavigate()
   const tier = getUserPreferences().subscriptionTier || 'free'
-
-  const active = useMemo(() => TOOLS.find(t => t.id === activeId) || TOOLS[0], [activeId])
+  const active = TOOLS.find(t => t.id === activeId) || TOOLS[0]
   const ActiveComponent = active.component
-
   const locked = !canAccess(active.tier, tier)
 
   const ctx = {
@@ -130,7 +81,6 @@ export default function Tools() {
   return (
     <div className="min-h-dvh bg-slate-950 flex flex-col">
       <Header />
-
       <main className="relative z-10 flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 pb-24">
         <ScrollReveal stagger className="mb-8 sg-stagger">
           <div className="inline-flex items-center gap-2 rounded-full border border-terracotta/25 bg-terracotta/10 px-2.5 py-1 text-[11px] font-medium text-terracotta">
@@ -138,15 +88,16 @@ export default function Tools() {
             Toolkit
           </div>
           <h1 className="mt-3 text-3xl sm:text-5xl font-semibold text-white tracking-[-0.025em] text-balance max-w-3xl">
-            Small tools, <span className="font-display text-slate-300">real dollar answers</span>.
+            Four tools, <span className="font-display text-slate-300">no clutter</span>.
           </h1>
           <p className="mt-3 text-slate-400 text-base leading-relaxed max-w-2xl">
-            The kind of questions you actually ask yourself about work: am I underpaid, what is my PTO
-            worth, is my travel package defensible. Anchored on public data and your own numbers.
+            Free anchors on the two questions every hourly worker asks: am I underpaid, and is my
+            overtime right. Pro adds a search across your saved paystubs and a single hub for the
+            scenario calculators.
           </p>
           <p className="mt-3 text-xs text-slate-500 leading-relaxed max-w-2xl">
-            Workers affected by pay errors lose about ${WAGE_THEFT_ROI.avgAnnualLossPerAffectedWorkerUSD.toLocaleString()} a year
-            on average (EPI). Pro at ${PRO_MONTHLY_USD}/month or ${PRO_ANNUAL_USD}/year pays for itself on the first catch.
+            Workers affected by pay errors lose about ${WAGE_THEFT_ROI.avgAnnualLossPerAffectedWorkerUSD.toLocaleString()} a year (EPI).
+            Pro at ${PRO_MONTHLY_USD}/month or ${PRO_ANNUAL_USD}/year pays for itself on the first catch.
           </p>
         </ScrollReveal>
 
@@ -240,21 +191,16 @@ function ToolTile({ tool, active, tier, onClick }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-white truncate">{tool.name}</span>
-          <TierPill tier={tool.tier} blocked={blocked} />
+          {tool.tier !== 'free' && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded border border-terracotta/40 text-terracotta bg-terracotta/10">
+              {blocked ? <Lock className="w-2.5 h-2.5" /> : <Sparkles className="w-2.5 h-2.5" />}
+              Pro
+            </span>
+          )}
         </div>
         <p className="text-xs text-slate-400 mt-1 leading-relaxed">{tool.blurb}</p>
       </div>
     </button>
-  )
-}
-
-function TierPill({ tier, blocked }) {
-  if (tier === 'free') return null
-  return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded border border-terracotta/40 text-terracotta bg-terracotta/10">
-      {blocked ? <Lock className="w-2.5 h-2.5" /> : <Sparkles className="w-2.5 h-2.5" />}
-      Pro
-    </span>
   )
 }
 
@@ -266,8 +212,7 @@ function Paywall({ onActivate, onDemoAlternative }) {
       </div>
       <h3 className="text-xl font-semibold text-white tracking-tight">This tool is part of Pro</h3>
       <p className="mt-3 text-sm text-slate-400 leading-relaxed">
-        Pro opens unlimited paycheck checks, industry pay packs, the inquiry email composer,
-        the paystub explainer, paycheck predictor, travel-nurse X-ray, retro pay, and pattern detection.
+        Pro opens unlimited paycheck checks, the paycheck history search, and the What If calculator.
         ${PRO_MONTHLY_USD}/month or ${PRO_ANNUAL_USD}/year.
       </p>
       <p className="mt-2 text-xs text-slate-500">

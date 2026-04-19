@@ -410,6 +410,6 @@ function validateTimesheetData(raw) {
 /* -------------------------------------------------------------------------- */
 /*  Legacy-doc helpers removed by design. ShiftGuard never generates demand     */
 /*  letters, complaint forms, attorney referrals, or anything else that looks   */
-/*  like legal advice. The HR email composer (`src/lib/hrEmail.js`) handles     */
+/*  like legal advice. Long-form text features that remain (paycheck Q&A) live  */
 /*  the single supported long-form output: a respectful inquiry email.          */
 /* -------------------------------------------------------------------------- */

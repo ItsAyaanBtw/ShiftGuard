@@ -241,7 +241,7 @@ export default function PaystubUpload() {
         )}
 
         {step === STEPS.PARSING && (
-          <ParsingStep imagePreview={imagePreview} />
+          <ParsingStep imagePreview={imagePreview} onUndo={handleReset} />
         )}
 
         {step === STEPS.REVIEW && (
@@ -355,7 +355,7 @@ function UploadStep({
 
 /* ---------- Parsing Step ---------- */
 
-function ParsingStep({ imagePreview }) {
+function ParsingStep({ imagePreview, onUndo }) {
   return (
     <div className="space-y-6">
       {imagePreview && (
@@ -363,10 +363,20 @@ function ParsingStep({ imagePreview }) {
           <img src={imagePreview} alt="Pay stub" className="w-full max-h-64 object-contain bg-slate-900" />
         </div>
       )}
-      <div className="text-center py-8">
+      <div className="text-center py-6">
         <Loader2 className="w-10 h-10 text-terracotta mx-auto mb-4 animate-spin" />
         <p className="text-white font-medium mb-1">Reading your pay stub...</p>
         <p className="text-slate-500 text-sm">This usually takes 5-10 seconds.</p>
+        {onUndo && (
+          <button
+            type="button"
+            onClick={onUndo}
+            className="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-600"
+          >
+            <X className="w-3.5 h-3.5" />
+            Undo upload
+          </button>
+        )}
       </div>
     </div>
   )
