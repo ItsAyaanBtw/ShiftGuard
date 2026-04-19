@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Landing from './screens/Landing'
+import EnvelopeLanding from './screens/EnvelopeLanding'
 import ShiftLogger from './screens/ShiftLogger'
 import TimesheetUpload from './screens/TimesheetUpload'
 import PaystubUpload from './screens/PaystubUpload'
@@ -29,6 +30,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/envelope" element={<EnvelopeLanding />} />
       <Route path="/log" element={<ShiftLogger />} />
       <Route path="/verify" element={<TimesheetUpload />} />
       <Route path="/upload" element={<PaystubUpload />} />

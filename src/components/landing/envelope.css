@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600;1,9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+.env-landing {
+  --paper-bg: oklch(0.965 0.012 85);
+  --paper-bg-warm: oklch(0.935 0.02 80);
+  --paper-fg: oklch(0.22 0.015 60);
+  --paper-muted: oklch(0.48 0.02 70);
+  --paper-green: oklch(0.38 0.08 155);
+  --paper-green-soft: oklch(0.72 0.08 155);
+  --paper-kraft: oklch(0.78 0.12 75);
+  --paper-kraft-dark: oklch(0.68 0.13 70);
+  --paper-kraft-darker: oklch(0.58 0.12 65);
+  --paper-red-bg: oklch(0.95 0.05 25);
+  --paper-red-fg: oklch(0.45 0.2 25);
+  --paper-red-border: oklch(0.7 0.15 25);
+  --paper-grid-line: oklch(0.22 0.015 60 / 0.035);
+
+  --env-serif: 'Fraunces', Georgia, serif;
+  --env-sans: 'Inter', system-ui, sans-serif;
+  --env-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  background: var(--paper-bg);
+  color: var(--paper-fg);
+  font-family: var(--env-sans);
+  min-height: 100vh;
+  width: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+.env-landing * { box-sizing: border-box; }
+.env-landing .font-serif { font-family: var(--env-serif); letter-spacing: -0.02em; }
+.env-landing .font-italic { font-style: italic; }
+.env-landing .font-mono { font-family: var(--env-mono); font-variant-numeric: tabular-nums; }
+
+.env-grid-bg {
+  background-image:
+    linear-gradient(to right, var(--paper-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--paper-grid-line) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+.env-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-family: var(--env-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  background: var(--paper-kraft);
+  color: var(--paper-fg);
+  border: 1px solid oklch(0.58 0.12 65 / 0.35);
+  white-space: nowrap;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset, 0 6px 14px -8px rgba(60,40,20,0.25);
+}
+.env-token--red {
+  background: var(--paper-red-bg);
+  color: var(--paper-red-fg);
+  border-color: var(--paper-red-border);
+}
+.env-token .lbl { opacity: 0.75; }
+.env-token .val { font-weight: 600; }
+
+.env-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border-radius: 999px;
+  font-family: var(--env-sans);
+  font-weight: 600;
+  font-size: 15px;
+  background: var(--paper-green);
+  color: var(--paper-bg);
+  border: none;
+  cursor: pointer;
+  transition: transform 300ms cubic-bezier(0.16,1,0.3,1), box-shadow 300ms;
+  box-shadow: 0 10px 30px -12px oklch(0.38 0.08 155 / 0.5);
+}
+.env-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -14px oklch(0.38 0.08 155 / 0.6); }
+.env-btn--ghost {
+  background: transparent;
+  color: var(--paper-fg);
+  border: 1px solid oklch(0.22 0.015 60 / 0.2);
+  box-shadow: none;
+}
+.env-btn--ghost:hover { background: oklch(0.22 0.015 60 / 0.04); box-shadow: none; }
