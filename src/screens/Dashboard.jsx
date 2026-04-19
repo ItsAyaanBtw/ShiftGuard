@@ -27,7 +27,6 @@ import { estimateTakeHome } from '../lib/taxEstimator'
 import { windowForTimeframe, totalsForWindow, monthHeatmap } from '../lib/shiftWindows'
 import stateLaws from '../data/stateLaws'
 
-const SHOW_DEMO_DISCREPANCY = true
 const SEVERITY_COLORS = { high: '#ef4444', medium: '#f59e0b', low: '#eab308' }
 
 export default function Dashboard() {
@@ -59,7 +58,8 @@ export default function Dashboard() {
 
         <TimeframeTotals />
 
-        {SHOW_DEMO_DISCREPANCY && <DiscrepancyBanner />}
+        <DiscrepancyBanner analysis={analysis} />
+
 
         <PayPictureGrid />
 
@@ -612,7 +612,16 @@ function ProjectedCard({ label, value }) {
   )
 }
 
-function DiscrepancyBanner() {
+function DiscrepancyBanner({ analysis }) {
+  const paystub = getPaystub()
+  const employer = paystub?.employer_name
+  const owed = Number(analysis?.totalOwed) || 0
+
+  // Only surface this banner when the comparison engine actually found something. Avoids
+  // showing stale cross-industry placeholder text (like "Target schedule shows 32 hours")
+  // after a healthcare demo has been loaded.
+  if (owed <= 0 || !employer) return null
+
   return (
     <div className="mb-6 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 sm:p-5 flex items-start gap-3">
       <div className="h-9 w-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0">
@@ -621,7 +630,8 @@ function DiscrepancyBanner() {
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-amber-100">Possible discrepancy detected</p>
         <p className="text-sm text-amber-100/80 mt-1 leading-relaxed">
-          Your Target schedule shows 32 hours but your last paystub paid for 30 hours. You may be owed about $36.
+          Your last {employer} paystub looks about ${owed.toFixed(0)} short of what your logged hours support.
+          Review the line-by-line comparison.
         </p>
       </div>
       <Link
@@ -642,12 +652,48 @@ function PayPictureGrid() {
     .filter(Boolean)
     .slice(0, 3)
 
-  // TODO: wire to real schedule data model
-  const upcomingShifts = [
-    { id: 1, employer: 'Target', day: 'Mon, Apr 21', time: '10:00 AM – 4:00 PM', hours: 6 },
-    { id: 2, employer: 'Target', day: 'Wed, Apr 23', time: '2:00 PM – 10:00 PM', hours: 8 },
-    { id: 3, employer: 'DoorDash', day: 'Sat, Apr 26', time: 'Evening block', hours: 5 },
-  ]
+  // Pull upcoming shifts from the user's actual logged data. If nothing is scheduled
+  // in the next 14 days, we show the most recent shifts instead so the card is never
+  // empty (and never renders employers from a different industry than the current
+  // scenario). Employer is taken from the loaded paystub so demo content always
+  // matches the selected persona.
+  const shifts = getShifts()
+  const fallbackEmployer = paystub?.employer_name || 'Work'
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const inTwoWeeks = new Date(today); inTwoWeeks.setDate(inTwoWeeks.getDate() + 14)
+  const sorted = [...shifts].sort((a, b) => new Date(a.date) - new Date(b.date))
+  let windowed = sorted.filter(s => {
+    const d = new Date(`${s.date}T00:00:00`)
+    return d >= today && d <= inTwoWeeks
+  })
+  if (!windowed.length) {
+    windowed = sorted.slice(-3)
+  }
+  const upcomingShifts = windowed.slice(0, 3).map((s, i) => {
+    const hoursRaw = (() => {
+      const [inH, inM] = (s.clockIn || '0:0').split(':').map(Number)
+      const [outH, outM] = (s.clockOut || '0:0').split(':').map(Number)
+      let mins = (outH * 60 + outM) - (inH * 60 + inM) - (Number(s.breakMinutes) || 0)
+      if (mins < 0) mins += 24 * 60
+      return mins / 60
+    })()
+    const d = new Date(`${s.date}T00:00:00`)
+    const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+    const fmtTime = (hhmm) => {
+      const [h, m] = (hhmm || '').split(':').map(Number)
+      if (!Number.isFinite(h)) return ''
+      const ap = h >= 12 ? 'PM' : 'AM'
+      const hh = ((h + 11) % 12) + 1
+      return `${hh}:${String(m || 0).padStart(2, '0')} ${ap}`
+    }
+    return {
+      id: s.id || i,
+      employer: s.employer || fallbackEmployer,
+      day: dayLabel,
+      time: `${fmtTime(s.clockIn)} – ${fmtTime(s.clockOut)}`,
+      hours: hoursRaw,
+    }
+  })
 
   return (
     <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -709,20 +755,23 @@ function PayPictureGrid() {
             Manage
           </Link>
         </div>
-        <ul className="divide-y divide-slate-800">
-          {upcomingShifts.map(s => (
-            <li key={s.id} className="flex items-center justify-between py-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-white truncate">{s.employer}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{s.day} · {s.time}</p>
-              </div>
-              <p className="text-sm text-slate-300 nums shrink-0 ml-3">{s.hours}h</p>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 text-[11px] text-slate-600">
-          Demo data &mdash; schedule integration is in progress.
-        </p>
+        {upcomingShifts.length === 0 ? (
+          <p className="text-sm text-slate-500 py-6 text-center">
+            No shifts logged yet. <Link to="/log" className="text-terracotta hover:text-terracotta-light">Log one</Link>.
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-800">
+            {upcomingShifts.map(s => (
+              <li key={s.id} className="flex items-center justify-between py-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{s.employer}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{s.day} · {s.time}</p>
+                </div>
+                <p className="text-sm text-slate-300 nums shrink-0 ml-3">{s.hours.toFixed(1)}h</p>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   )

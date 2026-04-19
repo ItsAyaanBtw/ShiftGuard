@@ -112,14 +112,22 @@ export async function callClaude(requestBody, { retries = 1 } = {}) {
         if (errText) {
           try {
             const j = JSON.parse(errText)
-            if (j.type === 'config' || (j.error && /ANTHROPIC_API_KEY/.test(j.error))) {
-              throw new Error(
-                'Scanning service is not configured. Add VITE_ANTHROPIC_API_KEY to .env.local for local dev, or set ANTHROPIC_API_KEY on the server. You can also enter the data by hand below.',
+            const anthropicMsg = j?.error?.message || (typeof j?.error === 'string' ? j.error : '')
+            // Any variant of "missing / invalid key" collapses to one clean user-facing string.
+            if (
+              j.type === 'config' ||
+              (typeof j?.error === 'string' && /ANTHROPIC_API_KEY/i.test(j.error)) ||
+              /x-api-key header is required|invalid x-api-key|authentication_error/i.test(anthropicMsg)
+            ) {
+              const err = new Error(
+                'The assistant is not configured on this device. Add ANTHROPIC_API_KEY (or VITE_ANTHROPIC_API_KEY) to .env.local and restart the dev server. You can keep using everything else on this page.',
               )
+              err.code = 'unconfigured'
+              throw err
             }
-            if (j.error?.message) msg = j.error.message
-            else if (typeof j.error === 'string') msg = j.error
-          } catch {
+            if (anthropicMsg) msg = anthropicMsg
+          } catch (innerErr) {
+            if (innerErr.code === 'unconfigured') throw innerErr
             msg += `: ${errText.slice(0, 200)}`
           }
         }
@@ -128,7 +136,15 @@ export async function callClaude(requestBody, { retries = 1 } = {}) {
 
       const data = await res.json()
       if (data?.error) {
-        throw new Error(typeof data.error === 'string' ? data.error : data.error.message || 'Scanning service returned an error')
+        const serverMsg = typeof data.error === 'string' ? data.error : data.error.message || 'Assistant returned an error'
+        if (/x-api-key header is required|invalid x-api-key|authentication_error|ANTHROPIC_API_KEY/i.test(serverMsg)) {
+          const err = new Error(
+            'The assistant is not configured on this device. Add ANTHROPIC_API_KEY to .env.local and restart the dev server.',
+          )
+          err.code = 'unconfigured'
+          throw err
+        }
+        throw new Error(serverMsg)
       }
       return data
     } catch (err) {

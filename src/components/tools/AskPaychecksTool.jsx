@@ -29,9 +29,17 @@ export default function AskPaychecksTool() {
     try {
       const r = await askPaychecks(q)
       setResult(r)
-      if (r.source === 'fallback' && r.error) setError(r.error)
+      // Only surface an error banner for non-config failures. If the assistant is
+      // simply unconfigured, we rely on the source: 'fallback' result block below
+      // which gives the user the matching paystubs without a scary red banner.
+      if (r.source === 'fallback' && r.error && !/configured|x-api-key|ANTHROPIC/i.test(r.error)) {
+        setError(r.error)
+      }
     } catch (err) {
-      setError(err.message || String(err))
+      const msg = err?.message || String(err)
+      if (!/configured|x-api-key|ANTHROPIC/i.test(msg)) {
+        setError(msg)
+      }
     } finally {
       setBusy(false)
     }
@@ -107,14 +115,26 @@ export default function AskPaychecksTool() {
 
       {result?.answer && (
         <section className="mt-5 rounded-2xl border border-terracotta/30 bg-terracotta/5 p-5">
-          <div className="flex items-center gap-2 text-terracotta">
-            <Sparkles className="w-4 h-4" />
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em]">Answer</p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-terracotta">
+              <Sparkles className="w-4 h-4" />
+              <p className="text-[11px] font-medium uppercase tracking-[0.16em]">Answer</p>
+            </div>
+            {result.source === 'local' && (
+              <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-amber-300 border border-amber-500/30 bg-amber-500/10 rounded-full px-2 py-0.5">
+                Computed on this device
+              </span>
+            )}
           </div>
           <p className="mt-2 text-sm text-slate-100 leading-relaxed whitespace-pre-wrap">{result.answer}</p>
           {!result.anyMatched && (
             <p className="mt-3 text-[11px] text-amber-300">
-              No strong keyword match in your vault, so I pulled the three most recent paystubs and answered from those.
+              No strong keyword match in your vault, so the three most recent paystubs were used to compute this.
+            </p>
+          )}
+          {result.source === 'local' && (
+            <p className="mt-3 text-[11px] text-slate-500 leading-relaxed">
+              Assistant call not configured. Totals above are computed directly from the matching paystubs. Add ANTHROPIC_API_KEY to .env.local for conversational answers.
             </p>
           )}
         </section>

@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import WorkflowProgress from './WorkflowProgress'
 import ScrollProgress from './motion/ScrollProgress'
-import BrandMark from './BrandMark'
+import BrandMark, { Wordmark } from './BrandMark'
 import { getActiveAccount, isLoggedIn, logout } from '../lib/accounts'
 
 /**
@@ -82,7 +82,8 @@ export default function Header() {
             className="flex items-center gap-2 shrink-0 min-h-[44px] min-w-[44px] py-2 -ml-2 pl-2 pr-3 rounded-lg hover:bg-slate-800/60 transition-colors"
           >
             <BrandMark size={28} />
-            <span className="text-lg font-semibold text-white tracking-tight whitespace-nowrap">ShiftGuard</span>
+            <Wordmark height={22} className="hidden sm:block" />
+            <span className="sm:hidden text-lg font-semibold text-white tracking-tight whitespace-nowrap">ShiftGuard</span>
           </Link>
 
           <nav

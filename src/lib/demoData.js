@@ -127,8 +127,8 @@ export const DEMO_SCENARIOS = [
     id: 'destiny',
     name: 'Destiny, 24',
     role: 'CNA at a long-term care facility in Tampa, FL',
-    industry: 'Healthcare (LTC)',
-    industryKey: 'healthcare',
+    industry: 'Long-term care',
+    industryKey: 'longterm_care',
     stubImage: '/demo/paystub-destiny.svg',
     summary:
       'Ten shifts at $15.50/hr. Kronos rounded each clock-in and clock-out to the nearest quarter-hour, which shaves time off every shift and adds up across the pay period.',
@@ -228,6 +228,8 @@ export function loadScenario(scenarioId) {
   const shifts = scenario.buildShifts(base)
   const paystub = scenario.paystub(base)
 
+  const department = departmentFor(scenario.id)
+
   const timesheet = {
     source_label: scenarioTimesheetSource(scenario.id),
     employer_name: paystub.employer_name,
@@ -241,12 +243,21 @@ export function loadScenario(scenarioId) {
       in_time: i === shifts.length - 1 ? bumpMinutes(s.clockIn, 6) : s.clockIn,
       out_time: s.clockOut,
       break_minutes: s.breakMinutes,
-      department: departmentFor(scenario.industryKey),
+      department,
       shift_notes: s.shiftType || '',
     })),
   }
 
-  const reconciled = reconcileShifts(shifts, timesheet)
+  // Tag every shift with the correct employer and department so every downstream
+  // surface (Dashboard upcoming shifts, Report, Compare) stays strictly inside the
+  // loaded persona's profession.
+  const labeledShifts = shifts.map(s => ({
+    ...s,
+    employer: paystub.employer_name,
+    department,
+  }))
+
+  const reconciled = reconcileShifts(labeledShifts, timesheet)
   const lastPayDate = fmtDate(base, -1)
 
   saveShifts(reconciled.shifts)
@@ -266,13 +277,16 @@ export function loadScenario(scenarioId) {
   return true
 }
 
-function departmentFor(industryKey) {
-  switch (industryKey) {
-    case 'healthcare': return 'ICU'
-    case 'warehouse':  return 'Inbound dock'
-    case 'restaurant': return 'Front of house'
-    case 'trades':     return 'Crew'
-    default:           return ''
+// Department is scenario-specific, not just industry-specific: Sarah is ICU, Destiny
+// is Memory Care, Marcus is Inbound Dock, Maria is FOH. This keeps each persona's
+// paperwork consistent across the pay stub, timesheet, and Dashboard.
+function departmentFor(scenarioId) {
+  switch (scenarioId) {
+    case 'sarah':   return 'ICU / Intensive Care'
+    case 'marcus':  return 'Inbound Dock, Bldg 4'
+    case 'destiny': return 'Memory Care, Wing B'
+    case 'maria':   return 'Front of House'
+    default:        return ''
   }
 }
 

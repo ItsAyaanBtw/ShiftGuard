@@ -142,11 +142,75 @@ const SYSTEM_PROMPT = [
   '- Three-sentence answers when possible. Bullet only when the user asks for a list.',
 ].join('\n')
 
+function money(n) {
+  const v = Number(n) || 0
+  return `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+/**
+ * Deterministic answer built from the matched paystubs only. Used when the assistant
+ * is unreachable OR unconfigured, so the tool still feels useful instead of showing
+ * an error. Intent is inferred from the same signals as the ranking pass.
+ */
+function localAnswer(prompt, matches) {
+  if (!matches.length) return null
+  const signals = tokenize(prompt)
+
+  const totalGross = matches.reduce((s, m) => s + (m.grossPay || 0), 0)
+  const totalNet = matches.reduce((s, m) => s + (m.netPay || 0), 0)
+  const totalHours = matches.reduce((s, m) => s + (m.hoursPaid || 0) + (m.overtimeHoursPaid || 0), 0)
+  const sortedByNet = [...matches].sort((a, b) => (b.netPay || 0) - (a.netPay || 0))
+  const highestNet = sortedByNet[0]
+
+  const lines = []
+  const scopeLabel = matches.length === 1
+    ? `${matches[0].employer} for ${matches[0].period}`
+    : `${matches.length} matching paystubs`
+
+  if (signals.wantsGross) {
+    lines.push(`Across ${scopeLabel}, total gross pay was ${money(totalGross)}.`)
+  }
+  if (signals.wantsNet || /take.?home/i.test(prompt)) {
+    lines.push(`Take-home across ${scopeLabel} was ${money(totalNet)}.`)
+  }
+  if (signals.wantsHours) {
+    lines.push(`Hours paid across those records total ${totalHours.toFixed(2)} hrs.`)
+  }
+  if (signals.wantsDeductions) {
+    const dedSummary = matches.map(m => {
+      const ded = (m.deductions || []).reduce((acc, d) => {
+        acc[d.name || 'Other'] = (acc[d.name || 'Other'] || 0) + (Number(d.amount) || 0)
+        return acc
+      }, {})
+      const parts = Object.entries(ded)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([name, amt]) => `${name} ${money(amt)}`)
+        .join(', ')
+      return `${m.period}: ${parts || 'none recorded'}`
+    }).join(' | ')
+    lines.push(`Top deductions per period: ${dedSummary}.`)
+  }
+  if (/highest|most|biggest/i.test(prompt) && highestNet) {
+    lines.push(`Highest take-home was ${highestNet.employer} ${highestNet.period} at ${money(highestNet.netPay)}.`)
+  }
+
+  if (!lines.length) {
+    // Default "tell me about this" style answer.
+    const sample = matches.slice(0, 3).map(m =>
+      `${m.employer} ${m.period}: gross ${money(m.grossPay)}, net ${money(m.netPay)}, ${(m.hoursPaid + m.overtimeHoursPaid).toFixed(2)} hrs`,
+    )
+    lines.push(`Found ${matches.length} paystub${matches.length === 1 ? '' : 's'} that match. ${sample.join('. ')}.`)
+  }
+
+  return lines.join(' ')
+}
+
 export async function askPaychecks(prompt) {
   const { matches, total, anyMatched } = selectMatches(prompt)
   if (!matches.length) {
     return {
-      answer: 'I do not have any paystubs saved yet. Upload one from the Pay stub tab and your history will be searchable here.',
+      answer: 'No paystubs saved yet. Upload one from the Pay stub tab and your history becomes searchable here.',
       matches: [],
       total,
       anyMatched: false,
@@ -165,15 +229,17 @@ export async function askPaychecks(prompt) {
     const text = await callClaudeText(composed, { maxTokens: 700, system: SYSTEM_PROMPT })
     return { answer: text, matches, total, anyMatched, source: 'ai' }
   } catch (err) {
+    // Graceful local answer: compute what we can from the matched records without the
+    // assistant. The UI distinguishes ai vs local with a small footer note below.
+    const fallbackText = localAnswer(prompt, matches)
+    const unconfigured = /configured|x-api-key|ANTHROPIC/i.test(err?.message || '')
     return {
-      answer: `I couldn\u2019t reach the assistant. Here are the matching paystub periods you can look at: ${matches
-        .map(m => `${m.employer} (${m.period})`)
-        .join('; ')}.`,
+      answer: fallbackText,
       matches,
       total,
       anyMatched,
-      source: 'fallback',
-      error: err.message || String(err),
+      source: unconfigured ? 'local' : 'fallback',
+      error: err?.message || String(err),
     }
   }
 }

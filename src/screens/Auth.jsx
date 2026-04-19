@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom'
 import {
   Mail, Lock, ArrowRight, Loader2, AlertCircle, CheckCircle2, UserPlus, LogIn,
 } from 'lucide-react'
-import BrandMark from '../components/BrandMark'
+import BrandMark, { Wordmark } from '../components/BrandMark'
 import {
   signUp, signIn, listAccounts, setActiveAccount, getActiveAccount, continueAsGuest,
 } from '../lib/accounts'
@@ -78,7 +78,7 @@ export default function Auth() {
         <div className="w-full max-w-md">
           <Link to="/" className="flex items-center gap-2 mb-6 text-white">
             <BrandMark size={30} />
-            <span className="text-lg font-semibold tracking-tight">ShiftGuard</span>
+            <Wordmark height={24} />
           </Link>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-7 glass-edge">
