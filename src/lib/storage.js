@@ -83,6 +83,10 @@ const DEFAULT_PREFS = {
   perDiemPerDay: 0,
   /** Trades: hazard / fringe differential in $/hr. */
   hazardDiffPerHour: 0,
+  /** Non-empty when a demo scenario is loaded (e.g. 'sarah' | 'marcus' | etc.). */
+  demoScenario: '',
+  /** Human-readable industry label for the loaded demo. */
+  demoIndustryLabel: '',
 }
 
 /** Free plan verification cap per calendar month. Updated to 3 per product spec. */

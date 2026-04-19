@@ -702,6 +702,11 @@ const INDUSTRY_OPTIONS = [
  */
 function IndustryProfile({ prefs, onChange }) {
   const active = prefs.industryMode || (prefs.healthcareMode ? 'healthcare' : 'general')
+  // When a demo scenario is loaded, collapse the cross-industry switcher so the
+  // walkthrough stays strictly inside that profession. Non-demo usage still
+  // sees the full switcher.
+  const demoLocked = !!prefs.demoScenario
+  const activeOption = INDUSTRY_OPTIONS.find(o => o.key === active)
 
   function pickIndustry(key) {
     onChange({
@@ -716,34 +721,41 @@ function IndustryProfile({ prefs, onChange }) {
         <div>
           <p className="text-[11px] font-medium text-slate-500 uppercase tracking-[0.18em]">Industry pay pack</p>
           <p className="text-sm text-white font-medium mt-1">
-            {INDUSTRY_OPTIONS.find(o => o.key === active)?.label || 'General hourly'}
+            {activeOption?.label || 'General hourly'}
           </p>
           <p className="text-xs text-slate-400 mt-0.5">
-            {INDUSTRY_OPTIONS.find(o => o.key === active)?.blurb}
+            {activeOption?.blurb}
           </p>
         </div>
+        {demoLocked && (
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-terracotta border border-terracotta/40 bg-terracotta/10 rounded-full px-2 py-0.5">
+            Demo · {prefs.demoIndustryLabel || activeOption?.label}
+          </span>
+        )}
       </div>
-      <div role="radiogroup" className="mt-3 flex flex-wrap gap-2">
-        {INDUSTRY_OPTIONS.map(o => {
-          const on = active === o.key
-          return (
-            <button
-              key={o.key}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              onClick={() => pickIndustry(o.key)}
-              className={`text-[11px] font-medium px-3 py-1.5 rounded-full border transition-colors ${
-                on
-                  ? 'border-terracotta/60 bg-terracotta/15 text-terracotta'
-                  : 'border-slate-800 bg-slate-900/40 text-slate-300 hover:border-slate-700'
-              }`}
-            >
-              {o.label}
-            </button>
-          )
-        })}
-      </div>
+      {!demoLocked && (
+        <div role="radiogroup" className="mt-3 flex flex-wrap gap-2">
+          {INDUSTRY_OPTIONS.map(o => {
+            const on = active === o.key
+            return (
+              <button
+                key={o.key}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => pickIndustry(o.key)}
+                className={`text-[11px] font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                  on
+                    ? 'border-terracotta/60 bg-terracotta/15 text-terracotta'
+                    : 'border-slate-800 bg-slate-900/40 text-slate-300 hover:border-slate-700'
+                }`}
+              >
+                {o.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {active === 'healthcare' && (
         <HealthcareFields prefs={prefs} onChange={onChange} />

@@ -22,47 +22,28 @@ export default function BrandMark({ size = 28, className = '' }) {
 }
 
 /**
- * Wordmark — rendered as pure type, not as an image. Two spans stacked inline:
- *   "shift"  in terracotta, heavy weight, rounded Geist
- *   "guard"  in white, Newsreader italic, as an editorial script accent
- * No PNG, no filter, no background rectangle. Scales cleanly at any size.
+ * Wordmark — renders the exact `shiftguard` PNG from /brand/wordmark.png
+ * with no filter, no tint, no background rectangle, and no padding. The image
+ * is shown `object-fit: contain` at a fixed pixel height; width auto-sizes so
+ * there's never a phantom white box around the letters.
  *
  * Props:
- *   size: base font-size in px (the two words both key off this).
- *   tone: 'light' (default, for dark surfaces) or 'dark' (for white surfaces).
+ *   size: desired pixel height of the wordmark. Width follows.
+ *   className: extra Tailwind classes.
  */
-export function Wordmark({ size = 20, className = '', tone = 'light' }) {
+export function Wordmark({ size = 28, className = '' }) {
   const px = typeof size === 'number' ? `${size}px` : size
-  const guardColor = tone === 'dark' ? '#0f172a' : '#ffffff'
   return (
-    <span
-      className={`inline-flex items-baseline leading-none select-none ${className}`}
-      style={{ fontSize: px }}
-      aria-label="ShiftGuard"
-    >
-      <span
-        className="text-terracotta"
-        style={{
-          fontFamily: "var(--font-sans, 'Geist'), system-ui, sans-serif",
-          fontWeight: 800,
-          letterSpacing: '-0.025em',
-          fontStyle: 'normal',
-        }}
-      >
-        shift
-      </span>
-      <span
-        className="font-display"
-        style={{
-          color: guardColor,
-          fontStyle: 'italic',
-          fontWeight: 500,
-          letterSpacing: '-0.01em',
-          marginLeft: '0.06em',
-        }}
-      >
-        guard
-      </span>
-    </span>
+    <img
+      src="/brand/wordmark.png"
+      alt="ShiftGuard"
+      draggable={false}
+      className={`shrink-0 select-none block ${className}`}
+      style={{
+        height: px,
+        width: 'auto',
+        objectFit: 'contain',
+      }}
+    />
   )
 }

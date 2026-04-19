@@ -348,9 +348,19 @@ export function loadScenario(scenarioId) {
     lastPayDate,
     subscriptionTier: 'free',
     continuousWageCheck: true,
+    // Demo marker: downstream surfaces (ShiftLogger industry pack, Landing
+    // industries grid, etc.) collapse to this single scenario's profession
+    // so the walkthrough never shows cross-industry chrome.
+    demoScenario: scenario.id,
+    demoIndustryLabel: scenario.industry,
   })
 
   return true
+}
+
+/** True if the current account has a loaded demo scenario. */
+export function isDemoActive(prefs) {
+  return !!(prefs && prefs.demoScenario)
 }
 
 // Department is scenario-specific, not just industry-specific: Sarah is ICU, Destiny

@@ -6,7 +6,8 @@ import {
 } from 'lucide-react'
 import Header from '../components/Header'
 import Disclaimer from '../components/Disclaimer'
-import { parsePaystub } from '../lib/claudeClient'
+import { parsePaystub, parsePaystubFromText } from '../lib/claudeClient'
+import { extractTextFromImage } from '../lib/ocrSpace'
 import {
   savePaystub, getPaystub, getPaystubImage, savePaystubImage,
   saveStubToVault, getPaystubVault, getUserPreferences, pushAnomaly,
@@ -32,6 +33,8 @@ export default function PaystubUpload() {
   const [dragActive, setDragActive] = useState(false)
   const [reviewSource, setReviewSource] = useState('scan')
   const [confirmError, setConfirmError] = useState('')
+  // Hybrid pipeline stage: 'idle' | 'ocr' | 'map' | 'vision-fallback'
+  const [parseStage, setParseStage] = useState('idle')
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
@@ -70,44 +73,78 @@ export default function PaystubUpload() {
     setImagePreview(preview)
     setStep(STEPS.PARSING)
     setConfirmError('')
+    setParseStage('idle')
 
+    let mediaType = file.type || 'image/jpeg'
+    if (mediaType === 'image/jpg') mediaType = 'image/jpeg'
+    if (!mediaType.startsWith('image/')) mediaType = 'image/jpeg'
+
+    // Hybrid pipeline:
+    //   1. OCR.space extracts layout-aware text from the image.
+    //   2. Claude (text mode) maps that text into the paystub JSON schema via
+    //      forced tool use.
+    //   3. If OCR fails for any reason we fall back to Claude's Vision API so
+    //      the user is never blocked by a single upstream outage.
+    let result = null
     try {
-      const base64 = await fileToBase64(file)
-      let mediaType = file.type || 'image/jpeg'
-      if (mediaType === 'image/jpg') mediaType = 'image/jpeg'
-      if (!mediaType.startsWith('image/')) mediaType = 'image/jpeg'
-
-      const result = await parsePaystub(base64, mediaType)
-
-      if (result.parse_confidence < 0.3) {
-        const note = result.notes || "This doesn't look like a pay stub."
-        setErrorMsg(`Image not recognized as a pay stub: ${note} Try a clearer photo, or enter your data by hand.`)
+      setParseStage('ocr')
+      const ocrText = await extractTextFromImage(file, mediaType)
+      setParseStage('map')
+      result = await parsePaystubFromText(ocrText)
+    } catch (ocrErr) {
+      const ocrMsg = ocrErr?.message || String(ocrErr)
+      const configIssue = /configured|x-api-key|ANTHROPIC/i.test(ocrMsg)
+      console.warn('[paystub] OCR+Claude path failed, falling back to Vision.', ocrMsg)
+      if (configIssue) {
+        setErrorMsg(ocrMsg)
         setStep(STEPS.ERROR)
+        setParseStage('idle')
         return
       }
-
-      const looksEmpty = !result.employer_name && !Number(result.gross_pay) && !Number(result.hours_paid)
-      if (looksEmpty) {
-        setErrorMsg("We couldn't find pay stub data in this image. Make sure the full stub is visible and in focus, or enter the numbers by hand.")
+      try {
+        setParseStage('vision-fallback')
+        const base64 = await fileToBase64(file)
+        result = await parsePaystub(base64, mediaType)
+      } catch (visionErr) {
+        const msg = visionErr?.message || String(visionErr)
+        if (/configured|x-api-key|ANTHROPIC/i.test(msg)) {
+          setErrorMsg(msg)
+        } else if (/API error|timed out|connect|OCR/i.test(msg)) {
+          setErrorMsg('The scanner could not be reached. Check your connection, or enter pay stub data by hand.')
+        } else {
+          setErrorMsg(msg.length > 10 ? msg : 'We could not read this pay stub. Try a clearer photo or enter the data by hand.')
+        }
         setStep(STEPS.ERROR)
+        setParseStage('idle')
         return
       }
-
-      setParsedData(result)
-      setReviewSource('scan')
-      setStep(STEPS.REVIEW)
-    } catch (err) {
-      console.error('Pay stub parsing failed:', err)
-      const msg = err.message || ''
-      if (msg.includes('API key') || msg.includes('Anthropic') || msg.includes('VITE_ANTHROPIC') || msg.includes('Scanning service is not configured')) {
-        setErrorMsg(msg)
-      } else if (msg.includes('API error') || msg.includes('timed out') || msg.includes('connect')) {
-        setErrorMsg('The scanner could not be reached. Check your connection, or enter pay stub data by hand.')
-      } else {
-        setErrorMsg(msg.length > 10 ? msg : 'We could not read this pay stub. Try a clearer photo or enter the data by hand.')
-      }
-      setStep(STEPS.ERROR)
     }
+
+    setParseStage('idle')
+
+    if (!result) {
+      setErrorMsg('We could not extract any fields. Try a clearer photo or enter the numbers by hand.')
+      setStep(STEPS.ERROR)
+      return
+    }
+
+    if (result.parse_confidence != null && result.parse_confidence < 0.3) {
+      const note = result.notes || "This doesn't look like a pay stub."
+      setErrorMsg(`Image not recognized as a pay stub: ${note} Try a clearer photo, or enter your data by hand.`)
+      setStep(STEPS.ERROR)
+      return
+    }
+
+    const looksEmpty = !result.employer_name && !Number(result.gross_pay) && !Number(result.hours_paid)
+    if (looksEmpty) {
+      setErrorMsg("We couldn't find pay stub data in this image. Make sure the full stub is visible and in focus, or enter the numbers by hand.")
+      setStep(STEPS.ERROR)
+      return
+    }
+
+    setParsedData(result)
+    setReviewSource('scan')
+    setStep(STEPS.REVIEW)
   }, [])
 
   function handleFileSelect(e) {
@@ -241,7 +278,7 @@ export default function PaystubUpload() {
         )}
 
         {step === STEPS.PARSING && (
-          <ParsingStep imagePreview={imagePreview} onUndo={handleReset} />
+          <ParsingStep imagePreview={imagePreview} onUndo={handleReset} stage={parseStage} />
         )}
 
         {step === STEPS.REVIEW && (
@@ -355,7 +392,17 @@ function UploadStep({
 
 /* ---------- Parsing Step ---------- */
 
-function ParsingStep({ imagePreview, onUndo }) {
+function ParsingStep({ imagePreview, onUndo, stage = 'idle' }) {
+  // Two-stage pipeline: OCR extracts the text, then the assistant maps it to
+  // our schema. Fallback: if OCR fails we switch to the Vision API instead.
+  const stages = [
+    { id: 'ocr', label: 'Extracting text with OCR' },
+    { id: 'map', label: 'Mapping fields to the schema' },
+  ]
+  const activeIdx = stage === 'vision-fallback'
+    ? 1
+    : stages.findIndex(s => s.id === stage)
+
   return (
     <div className="space-y-6">
       {imagePreview && (
@@ -367,19 +414,63 @@ function ParsingStep({ imagePreview, onUndo }) {
           />
         </div>
       )}
-      <div className="text-center py-4">
-        <Loader2 className="w-10 h-10 text-terracotta mx-auto mb-4 animate-spin" />
-        <p className="text-white font-medium mb-1">Reading your pay stub...</p>
-        <p className="text-slate-500 text-sm">This usually takes 5 to 10 seconds.</p>
+      <div className="py-2">
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-6 h-6 text-terracotta shrink-0 animate-spin" />
+          <div className="min-w-0">
+            <p className="text-white font-medium">Reading your pay stub</p>
+            <p className="text-slate-500 text-xs">
+              {stage === 'vision-fallback'
+                ? 'OCR was unavailable. Falling back to the vision model.'
+                : 'Two-step pipeline: layout-aware OCR, then structured mapping.'}
+            </p>
+          </div>
+        </div>
+
+        <ol className="mt-4 space-y-2" aria-label="Parsing progress">
+          {stages.map((s, i) => {
+            const isActive = i === activeIdx
+            const isDone = activeIdx > i
+            return (
+              <li
+                key={s.id}
+                className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${
+                  isActive
+                    ? 'border-terracotta/40 bg-terracotta/10 text-terracotta'
+                    : isDone
+                      ? 'border-green-500/25 bg-green-500/5 text-green-200'
+                      : 'border-slate-800 bg-slate-900/50 text-slate-500'
+                }`}
+              >
+                <span
+                  className={`inline-flex w-5 h-5 items-center justify-center rounded-full text-[10px] font-semibold ${
+                    isActive
+                      ? 'bg-terracotta text-slate-950'
+                      : isDone
+                        ? 'bg-green-500/30 text-green-200'
+                        : 'bg-slate-800 text-slate-500'
+                  }`}
+                >
+                  {isDone ? <CheckCircle2 className="w-3 h-3" /> : i + 1}
+                </span>
+                <span className="font-medium">{s.label}</span>
+                {isActive && <Loader2 className="w-3.5 h-3.5 ml-auto animate-spin" />}
+              </li>
+            )
+          })}
+        </ol>
+
         {onUndo && (
-          <button
-            type="button"
-            onClick={onUndo}
-            className="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-600"
-          >
-            <X className="w-3.5 h-3.5" />
-            Undo upload
-          </button>
+          <div className="mt-5 text-center">
+            <button
+              type="button"
+              onClick={onUndo}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-600"
+            >
+              <X className="w-3.5 h-3.5" />
+              Undo upload
+            </button>
+          </div>
         )}
       </div>
     </div>

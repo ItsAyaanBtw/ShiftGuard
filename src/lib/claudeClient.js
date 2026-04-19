@@ -276,6 +276,54 @@ const TIMESHEET_TOOL = {
 /**
  * Parse a pay stub image. Uses forced tool use for reliable structured output.
  */
+/**
+ * Parse a pay stub from pre-extracted OCR text. This is the primary path in the
+ * hybrid pipeline: OCR.space does layout-aware text extraction first, Claude
+ * then maps that raw text into our structured JSON schema via forced tool use.
+ *
+ * Using text instead of the Vision API avoids "layout collapse" on multi-column
+ * paystubs and dramatically cuts token cost per parse.
+ */
+export async function parsePaystubFromText(ocrText) {
+  const text = String(ocrText || '').trim()
+  if (!text) throw new Error('No OCR text to parse.')
+
+  const systemPrompt =
+    'You extract numeric fields from the OCR text of a US pay stub. The input was ' +
+    'produced by an OCR engine and may have misaligned columns, extra whitespace, or ' +
+    'missing characters. Rules: (1) Always call record_paystub. (2) Use 0 or empty ' +
+    'string for fields you cannot read confidently. (3) Never invent numbers, dates, ' +
+    'or employer names. (4) Strip currency symbols and commas. (5) Dates in YYYY-MM-DD; ' +
+    'infer the year from the pay period if needed. (6) If the text clearly is not a ' +
+    'pay stub, call the tool with parse_confidence < 0.3 and explain in notes. ' +
+    '(7) Prefer the CURRENT (not year-to-date) values when both are present.'
+
+  const response = await callClaude({
+    max_tokens: 2048,
+    system: systemPrompt,
+    tools: [PAYSTUB_TOOL],
+    tool_choice: { type: 'tool', name: PAYSTUB_TOOL.name },
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text:
+              'OCR TEXT (between the markers, preserve reasoning about columns):\n' +
+              '<<<OCR_BEGIN>>>\n' +
+              text +
+              '\n<<<OCR_END>>>\n\n' +
+              'Extract every field the pay stub contains.',
+          },
+        ],
+      },
+    ],
+  })
+
+  return validatePaystubData(extractToolInput(response, PAYSTUB_TOOL.name))
+}
+
 export async function parsePaystub(imageBase64, mediaType = 'image/jpeg') {
   if (!imageBase64) {
     throw new Error('No image data to scan.')
