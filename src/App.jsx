@@ -29,8 +29,9 @@ function LoadingFallback() {
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route path="/" element={<EnvelopeLanding />} />
       <Route path="/envelope" element={<EnvelopeLanding />} />
+      <Route path="/landing" element={<Landing />} />
       <Route path="/log" element={<ShiftLogger />} />
       <Route path="/verify" element={<TimesheetUpload />} />
       <Route path="/upload" element={<PaystubUpload />} />
