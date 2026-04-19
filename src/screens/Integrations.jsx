@@ -125,6 +125,9 @@ function IntegrationCard({ adapter, record, onSaved }) {
   const [icalUrl, setIcalUrl] = useState(record?.icalUrl || '')
   const [accountId, setAccountId] = useState(record?.auth?.accountId || '')
   const [csvText, setCsvText] = useState('')
+  const [jsonText, setJsonText] = useState('')
+  const [placeFilterName, setPlaceFilterName] = useState('')
+  const [minDurationMin, setMinDurationMin] = useState(120)
 
   const connected = !!record?.connectedAt
 
@@ -178,6 +181,15 @@ function IntegrationCard({ adapter, record, onSaved }) {
       } else if (adapter.authType === 'csv_upload') {
         if (!csvText.trim()) throw new Error('Paste or drop in the CSV first.')
         imported = await adapter.importShifts({ csv: csvText })
+      } else if (adapter.authType === 'json_upload') {
+        if (!jsonText.trim()) throw new Error('Drop in the Location History JSON file first.')
+        imported = await adapter.importShifts({
+          timelineJson: jsonText,
+          minDurationMinutes: Number(minDurationMin) || 120,
+          placeFilter: placeFilterName.trim()
+            ? { kind: 'name', value: placeFilterName.trim() }
+            : null,
+        })
       }
 
       const existing = getShifts()
@@ -197,6 +209,12 @@ function IntegrationCard({ adapter, record, onSaved }) {
     if (!file) return
     const text = await file.text()
     setCsvText(text)
+  }
+
+  async function onJsonFile(file) {
+    if (!file) return
+    const text = await file.text()
+    setJsonText(text)
   }
 
   function disconnect() {
@@ -341,6 +359,47 @@ function IntegrationCard({ adapter, record, onSaved }) {
                 }}
                 busy={busy}
                 label="Import CSV"
+              />
+            </>
+          )}
+
+          {adapter.authType === 'json_upload' && (
+            <>
+              <Field label="Drop the Location History month JSON file">
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={e => onJsonFile(e.target.files?.[0])}
+                  className="block w-full text-xs text-slate-300 file:mr-3 file:rounded-md file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-slate-200 file:text-xs"
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Only visits to (optional, partial match)">
+                  <input
+                    type="text"
+                    value={placeFilterName}
+                    onChange={e => setPlaceFilterName(e.target.value)}
+                    placeholder="Memorial Hermann"
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="Min visit length (minutes)">
+                  <input
+                    type="number"
+                    min="15"
+                    value={minDurationMin}
+                    onChange={e => setMinDurationMin(e.target.value)}
+                    className={inputCls}
+                  />
+                </Field>
+              </div>
+              <SaveRow
+                onSave={() => {
+                  saveIntegration(adapter.id, { name: adapter.name })
+                  syncNow()
+                }}
+                busy={busy}
+                label="Import timeline"
               />
             </>
           )}

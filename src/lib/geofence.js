@@ -3,6 +3,7 @@ import {
   getGeofenceState,
   saveGeofenceState,
   pushAnomaly,
+  getPaystub,
 } from './storage'
 import { notify, isSupported as notificationsSupported, getPermission as getNotificationPermission } from './notifications'
 
@@ -121,12 +122,36 @@ export function evaluateFences(position, { now = Date.now() } = {}) {
       || (!inside && fence.remindOnLeave !== false)
     if (shouldNotify && sinceLastNotify > NOTIFICATION_DEBOUNCE_MS) {
       state[fence.id].lastNotifiedAt = now
-      events.push({ fence, direction: inside ? 'enter' : 'leave', distance })
+      const event = { fence, direction: inside ? 'enter' : 'leave', distance }
+      // When leaving and we have a known enter time for this fence, attach a rough
+      // time-on-site summary so the notification is actually useful.
+      if (!inside && prev.since) {
+        event.summary = summarizeShift({ enterIso: prev.since, leaveIso: state[fence.id].since })
+      }
+      events.push(event)
     }
   }
 
   saveGeofenceState(state)
   return events
+}
+
+function summarizeShift({ enterIso, leaveIso }) {
+  const enter = new Date(enterIso)
+  const leave = new Date(leaveIso)
+  if (Number.isNaN(enter.valueOf()) || Number.isNaN(leave.valueOf())) return null
+  const minutes = Math.max(0, Math.round((leave - enter) / 60000))
+  if (minutes < 5) return null
+  const hours = minutes / 60
+  const paystub = getPaystub()
+  const rate = Number(paystub?.hourly_rate) || 0
+  const estimatedEarned = rate > 0 ? hours * rate : null
+  return {
+    hours: Number(hours.toFixed(2)),
+    minutes,
+    rate,
+    estimatedEarned: estimatedEarned != null ? Number(estimatedEarned.toFixed(2)) : null,
+  }
 }
 
 /**
@@ -165,16 +190,27 @@ export function startGeofenceWatcher({ onChange, onEvent } = {}) {
   }
 }
 
-function fireReminder({ fence, direction }) {
+function fireReminder({ fence, direction, summary }) {
   const enter = direction === 'enter'
   const title = enter
     ? `Heading into ${fence.label}?`
     : `Leaving ${fence.label}?`
-  const body = enter
-    ? 'Clock in and log your shift start in ShiftGuard so your paycheck math stays accurate.'
-    : 'Log your clock-out time in ShiftGuard so the next paycheck check catches any shortfalls.'
 
-  // Fire a browser notification if we can.
+  let body
+  if (enter) {
+    body = 'Clock in and log your shift start in ShiftGuard so your paycheck math stays accurate.'
+  } else if (summary) {
+    const hrsLabel = summary.hours >= 1
+      ? `${summary.hours.toFixed(2)}h`
+      : `${summary.minutes}m`
+    const earnBit = summary.estimatedEarned != null
+      ? `About $${summary.estimatedEarned.toFixed(2)} earned at $${summary.rate.toFixed(2)}/h.`
+      : 'Add your hourly rate in the Pay stub tab to see estimated earnings here.'
+    body = `You were inside the fence for ${hrsLabel}. ${earnBit} Log the clock-out in ShiftGuard.`
+  } else {
+    body = 'Log your clock-out time in ShiftGuard so the next paycheck check catches any shortfalls.'
+  }
+
   if (getNotificationPermission() === 'granted') {
     notify(title, {
       body,
@@ -186,11 +222,15 @@ function fireReminder({ fence, direction }) {
     })
   }
 
-  // Always record in-app so there's a breadcrumb even without OS notifications.
   pushAnomaly({
     severity: enter ? 'info' : 'warn',
     title,
     detail: `${body} (Geofence: ${fence.label}, direction: ${direction}).`,
-    context: { type: 'geofence', fenceId: fence.id, direction },
+    context: {
+      type: 'geofence',
+      fenceId: fence.id,
+      direction,
+      ...(summary || {}),
+    },
   })
 }

@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react'
+import { useEffect, useReducer, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
@@ -6,7 +6,7 @@ import {
 import {
   TrendingUp, DollarSign, AlertTriangle,
   ShieldAlert, ArrowRight, CheckCircle2,
-  CalendarClock, Bell, Receipt, Briefcase, Clock as ClockIcon,
+  CalendarClock, Bell, Receipt, Briefcase, Clock as ClockIcon, Car,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
@@ -19,10 +19,12 @@ import {
   getPaystub,
   getPaystubVault,
   getAnomalies,
+  getShifts,
 } from '../lib/storage'
 import { normalizeAnalysis } from '../lib/analysisUtils'
 import { nextPayday, daysUntil, formatShortDate } from '../lib/payCycle'
 import { estimateTakeHome } from '../lib/taxEstimator'
+import { windowForTimeframe, totalsForWindow, monthHeatmap } from '../lib/shiftWindows'
 import stateLaws from '../data/stateLaws'
 
 const SHOW_DEMO_DISCREPANCY = true
@@ -54,6 +56,8 @@ export default function Dashboard() {
 
       <main className="relative z-10 flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-6 pb-24">
         <OverviewSection prefs={prefs} />
+
+        <TimeframeTotals />
 
         {SHOW_DEMO_DISCREPANCY && <DiscrepancyBanner />}
 
@@ -278,6 +282,112 @@ function PersonalSection({ analysis, verifiedCount, healthcareMode, onReport }) 
 }
 
 /* ---------- Insights strip ---------- */
+
+function TimeframeTotals() {
+  const [timeframe, setTimeframe] = useState('week')
+  const [, bump] = useReducer(n => n + 1, 0)
+  useEffect(() => {
+    const on = () => bump()
+    window.addEventListener('shiftguard-data-changed', on)
+    return () => window.removeEventListener('shiftguard-data-changed', on)
+  }, [])
+
+  const shifts = getShifts()
+  const range = useMemo(() => windowForTimeframe(timeframe), [timeframe])
+  const totals = useMemo(() => totalsForWindow(shifts, range), [shifts, range])
+  const heatmap = useMemo(() => (timeframe === 'month' ? monthHeatmap(shifts) : null), [shifts, timeframe])
+
+  return (
+    <section className="mb-6 rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Your shifts</p>
+          <p className="text-lg font-semibold text-white">{range.label}</p>
+        </div>
+        <div className="inline-flex items-center rounded-full border border-slate-800 bg-slate-950 p-1 text-xs">
+          {['day', 'week', 'month'].map(t => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTimeframe(t)}
+              className={`px-3 py-1 rounded-full font-medium transition-colors ${
+                timeframe === t ? 'bg-terracotta text-white' : 'text-slate-300 hover:text-white'
+              }`}
+              aria-pressed={timeframe === t}
+            >
+              {t === 'day' ? 'Today' : t === 'week' ? 'This week' : 'This month'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <TimeTile icon={<ClockIcon className="w-3.5 h-3.5" />} label="Hours" value={totals.hours.toFixed(1)} />
+        <TimeTile icon={<Briefcase className="w-3.5 h-3.5" />} label="Shifts" value={String(totals.count)} />
+        <TimeTile icon={<DollarSign className="w-3.5 h-3.5" />} label="Tips" value={`$${totals.tips.toFixed(2)}`} />
+        <TimeTile icon={<Car className="w-3.5 h-3.5" />} label={`Mileage${totals.miles > 0 ? ` (${totals.miles.toFixed(0)} mi)` : ''}`} value={`$${totals.reimbursement.toFixed(2)}`} />
+      </div>
+
+      {heatmap && <MonthHeatmap heatmap={heatmap} />}
+    </section>
+  )
+}
+
+function TimeTile({ icon, label, value }) {
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+      <p className="text-[10px] uppercase text-slate-500 tracking-[0.14em] flex items-center gap-1">
+        {icon}
+        {label}
+      </p>
+      <p className="mt-1 text-xl font-semibold text-white nums">{value}</p>
+    </div>
+  )
+}
+
+function MonthHeatmap({ heatmap }) {
+  const { days, leadingBlanks, maxHours, label } = heatmap
+  return (
+    <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950/40 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-medium text-slate-300">{label}</p>
+        <p className="text-[10px] text-slate-500 uppercase tracking-[0.14em]">Hours per day</p>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-[10px]">
+        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+          <span key={i} className="text-center text-slate-600">{d}</span>
+        ))}
+        {Array.from({ length: leadingBlanks }).map((_, i) => (
+          <span key={`blank-${i}`} className="h-8 rounded-md bg-transparent" />
+        ))}
+        {days.map(d => {
+          const intensity = maxHours > 0 ? d.hours / maxHours : 0
+          const shade = d.hours === 0
+            ? 'bg-slate-900 text-slate-600'
+            : intensity > 0.75
+              ? 'bg-terracotta text-white'
+              : intensity > 0.45
+                ? 'bg-terracotta/70 text-white'
+                : intensity > 0.2
+                  ? 'bg-terracotta/40 text-slate-100'
+                  : 'bg-terracotta/20 text-slate-200'
+          const [y, m, day] = d.date.split('-')
+          return (
+            <span
+              key={d.date}
+              title={`${d.date} · ${d.hours.toFixed(2)}h across ${d.count} shift${d.count === 1 ? '' : 's'}`}
+              className={`h-8 rounded-md flex items-center justify-center font-mono ${shade}`}
+              data-y={y}
+              data-m={m}
+            >
+              {Number(day)}
+            </span>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 function InsightsStrip({ prefs, stateCode }) {
   const paystub = getPaystub()

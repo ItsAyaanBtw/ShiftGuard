@@ -43,6 +43,8 @@ function newShiftTemplate() {
     chargeNurse: false,
     preceptor: false,
     onCallHours: 0,
+    milesDriven: 0,
+    reimbursementRate: 0.67,  // 2025 IRS standard mileage rate
   }
 }
 
@@ -132,6 +134,11 @@ export default function ShiftLogger() {
 
   const totalHours = shifts.reduce((sum, s) => sum + calcShiftHours(s), 0)
   const totalTips = shifts.reduce((sum, s) => sum + (Number(s.tips) || 0), 0)
+  const totalMiles = shifts.reduce((sum, s) => sum + (Number(s.milesDriven) || 0), 0)
+  const reimbursementTotal = shifts.reduce(
+    (sum, s) => sum + (Number(s.milesDriven) || 0) * (Number(s.reimbursementRate) || 0),
+    0,
+  )
   const sortedShifts = [...shifts].sort((a, b) => b.date.localeCompare(a.date))
   const verifiedCount = shifts.filter(s => s?.verification?.status === 'verified').length
   const mismatchCount = shifts.filter(s => s?.verification?.status === 'mismatch').length
@@ -157,7 +164,7 @@ export default function ShiftLogger() {
         <IndustryProfile prefs={prefs} onChange={updatePrefs} />
 
         {/* Summary cards */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <SummaryCard
             icon={<CalendarDays className="w-4 h-4" />}
             label="Shifts"
@@ -172,6 +179,11 @@ export default function ShiftLogger() {
             icon={<DollarSign className="w-4 h-4" />}
             label="Tips"
             value={`$${totalTips.toFixed(2)}`}
+          />
+          <SummaryCard
+            icon={<DollarSign className="w-4 h-4" />}
+            label={totalMiles > 0 ? `Miles (${totalMiles.toFixed(0)})` : 'Mileage'}
+            value={`$${reimbursementTotal.toFixed(2)}`}
           />
         </div>
 
@@ -484,6 +496,31 @@ function ShiftFormModal({ formData, setFormData, onSave, onClose, isEditing, ind
                 step="0.01"
                 value={formData.tips}
                 onChange={e => update('tips', e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-terracotta"
+              />
+            </FormField>
+          </div>
+
+          {/* Commute / mileage — shown for every industry. The IRS 2025 standard rate is
+              $0.67/mi; employers that reimburse use that or a policy rate. */}
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Miles driven for this shift">
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                value={formData.milesDriven ?? 0}
+                onChange={e => update('milesDriven', Number(e.target.value))}
+                className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-terracotta"
+              />
+            </FormField>
+            <FormField label="Reimbursement rate ($/mi)">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.reimbursementRate ?? 0.67}
+                onChange={e => update('reimbursementRate', Number(e.target.value))}
                 className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-terracotta"
               />
             </FormField>

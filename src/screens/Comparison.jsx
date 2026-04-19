@@ -352,10 +352,9 @@ export default function Comparison() {
             <div className="flex-1 min-w-0">
               <p className="text-sm text-white font-medium">Take the next step</p>
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                Pro at $6.99/month (or $59/year) opens the inquiry email composer, PTO value,
-                volatility score, travel-nurse X-ray, retro pay estimate, and the full CA/NY rule pack.
-                Affected workers lose about $3,300/year to pay errors on average, so Pro pays for itself
-                on the first catch.
+                Run the Deep Audit once for $14.99 and we&rsquo;ll check the last 12 months of paystubs
+                the same way. If a single catch returns the average $3,300/year, that&rsquo;s a 220x return.
+                Pro at $6.99/month is there after that if you want every paycheck checked automatically.
               </p>
               <div className="mt-2 flex items-center gap-2">
                 <Link

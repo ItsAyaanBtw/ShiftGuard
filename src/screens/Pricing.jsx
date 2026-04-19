@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Shield, Check, Sparkles, FileCheck2, DollarSign } from 'lucide-react'
+import { Shield, Check, Sparkles, FileCheck2, DollarSign, ArrowRight } from 'lucide-react'
 import Header from '../components/Header'
 import Disclaimer from '../components/Disclaimer'
 import ScrollReveal from '../components/motion/ScrollReveal'
@@ -10,18 +10,20 @@ import {
 } from '../lib/storage'
 import {
   WAGE_THEFT_ROI, PRO_MONTHLY_USD, PRO_ANNUAL_USD, DEEP_AUDIT_ONE_TIME_USD,
-  proMonthlyRoiMultiple, proAnnualRoiMultiple,
 } from '../lib/roiConstants'
 
 /**
- * Two-tier paid pricing. We simplified back from a three-tier ladder (Free / Pro / Premium)
- * because survey feedback said accessibility matters more than feature segmentation at this
- * stage. Premium features folded into Pro, which stays at a price the broader hourly
- * workforce can absorb.
+ * Pricing page with Deep Audit as the primary upsell.
+ *
+ * We lead with Deep Audit ($14.99 one-time) because the single highest-value moment for
+ * a new user is discovering that a single paycheck error pays for the audit many times
+ * over. Pro is still here and still the long-term business, but it now sits underneath
+ * the one-time purchase that captures intent on day one.
  */
 
-const PRO_EFFECTIVE_ANNUAL = Number((PRO_ANNUAL_USD / 12).toFixed(2))   // 4.92
-const PRO_ANNUAL_DISCOUNT_PCT = Math.round((1 - PRO_ANNUAL_USD / (PRO_MONTHLY_USD * 12)) * 100)  // 30%
+const PRO_EFFECTIVE_ANNUAL = Number((PRO_ANNUAL_USD / 12).toFixed(2))
+const PRO_ANNUAL_DISCOUNT_PCT = Math.round((1 - PRO_ANNUAL_USD / (PRO_MONTHLY_USD * 12)) * 100)
+const AUDIT_ROI_MULTIPLE = Math.round(WAGE_THEFT_ROI.avgAnnualLossPerAffectedWorkerUSD / DEEP_AUDIT_ONE_TIME_USD)
 
 const TIERS = [
   {
@@ -30,12 +32,10 @@ const TIERS = [
     tagline: 'Unlimited logging, limited checks',
     highlights: [
       `${FREE_MONTHLY_CHECK_LIMIT} paycheck checks per month`,
-      'Unlimited shift logging',
-      'Unlimited employer time-record uploads',
+      'Unlimited shift logging + mileage tracking',
+      'Employer time-record uploads',
       'Pay stub vault with CSV export',
-      'Federal FLSA rule coverage',
       'Take-home estimator + next-paycheck planner',
-      'Market rate vs. BLS median (basic)',
     ],
     cta: 'Start free',
     to: '/log',
@@ -43,20 +43,17 @@ const TIERS = [
   {
     id: 'pro',
     name: 'Pro',
-    tagline: 'Everything you need to back every paycheck',
+    tagline: 'For anyone who wants every paycheck checked',
     highlights: [
       'Unlimited paycheck checks',
+      'Paystub Explainer (line by line)',
+      'Paycheck Predictor (monthly take-home)',
       'Industry pay packs: healthcare, warehouse, restaurant, trades',
-      'Full CA / NY / TX / FL rule engine with CA meal-break math',
-      'Travel-nurse rate X-ray with GSA per-diem comparison',
-      'Retro pay estimate across state lookback windows',
-      'Inquiry email drafts to payroll (unlimited)',
+      'Retro pay estimate + HR inquiry email drafts',
       'Continuous wage-check alerts across your vault',
-      'PTO value and paycheck volatility tools',
-      'Historical audit trail and evidence export',
+      'Travel-nurse rate X-ray',
     ],
     cta: 'Activate Pro',
-    featured: true,
   },
 ]
 
@@ -73,8 +70,8 @@ export default function Pricing() {
 
   const tier = getUserPreferences().subscriptionTier || 'free'
 
-  function activate(target) {
-    saveUserPreferences({ subscriptionTier: target, billingCadence: cadence })
+  function activatePro() {
+    saveUserPreferences({ subscriptionTier: 'pro', billingCadence: cadence })
     bump()
     navigate('/tools')
   }
@@ -83,29 +80,19 @@ export default function Pricing() {
     <div className="min-h-dvh bg-slate-950 flex flex-col">
       <Header />
       <main className="relative z-10 flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-14 pb-24">
-        <ScrollReveal stagger className="text-center max-w-2xl mx-auto mb-10 sg-stagger">
+        <ScrollReveal stagger className="text-center max-w-2xl mx-auto mb-8 sg-stagger">
           <div className="inline-flex items-center gap-2 rounded-full border border-terracotta/25 bg-terracotta/10 px-3 py-1.5 text-terracotta text-xs sm:text-sm font-medium">
             <Shield className="w-4 h-4" />
             <span>Pricing</span>
           </div>
           <h1 className="mt-4 text-3xl sm:text-5xl font-semibold text-white tracking-[-0.025em] text-balance">
-            Priced for the workers it&rsquo;s <span className="font-display text-terracotta">built for</span>.
+            Start with a{' '}
+            <span className="font-display text-terracotta">one-time audit</span>.
           </h1>
           <p className="mt-4 text-slate-400 leading-relaxed max-w-xl mx-auto">
-            Free keeps the basics free for anyone paid hourly. Pro opens unlimited checks, the full
-            rule engine, travel-nurse tooling, and retro pay estimates at ${PRO_MONTHLY_USD}/month. No billing is wired
-            in this build, so plan toggles are local demo flags.
+            Most new users catch the error they were looking for in a single check. Run the
+            Deep Audit once for ${DEEP_AUDIT_ONE_TIME_USD}. Upgrade to Pro later if you want ongoing verification.
           </p>
-
-          <div className="mt-6 inline-flex items-center rounded-full border border-slate-800 bg-slate-900 p-1">
-            <CadencePill active={cadence === 'monthly'} onClick={() => setCadence('monthly')} label="Monthly" />
-            <CadencePill
-              active={cadence === 'annual'}
-              onClick={() => setCadence('annual')}
-              label={<>Annual <span className="ml-1 text-[10px] font-bold text-terracotta">save {PRO_ANNUAL_DISCOUNT_PCT}%</span></>}
-            />
-          </div>
-
           <p className="mt-3 text-[11px] text-slate-500">
             Current plan on this browser:{' '}
             <span className="text-terracotta font-medium capitalize">
@@ -114,24 +101,82 @@ export default function Pricing() {
           </p>
         </ScrollReveal>
 
-        {/* ROI anchor */}
+        {/* Deep Audit lead card */}
         <ScrollReveal className="max-w-4xl mx-auto mb-10">
-          <div className="rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 via-terracotta/10 to-slate-900 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <div className="inline-flex items-center gap-2 text-terracotta shrink-0">
-              <DollarSign className="w-5 h-5" />
-              <p className="text-sm font-semibold">The math</p>
+          <article className="relative rounded-3xl border-2 border-terracotta/45 bg-gradient-to-br from-slate-900 via-terracotta/10 to-slate-900 p-6 sm:p-10 glass-edge shadow-warm">
+            <div className="absolute -top-3 left-6 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-terracotta text-white text-[11px] font-semibold tracking-wide shadow-warm">
+              <Sparkles className="w-3 h-3" />
+              Start here
             </div>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              Affected workers lose about <span className="text-white font-semibold nums">$
-              {WAGE_THEFT_ROI.avgAnnualLossPerAffectedWorkerUSD.toLocaleString()}</span> a year to pay errors (EPI).
-              Pro at ${PRO_MONTHLY_USD}/month pays for itself
-              <span className="text-white font-semibold"> {proMonthlyRoiMultiple()}x over</span> on one catch.
-              Annual Pro at ${PRO_ANNUAL_USD}/year pays for itself {proAnnualRoiMultiple()}x over.
-            </p>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-10 items-center">
+              <div className="md:col-span-7">
+                <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-2.5 py-1 text-[11px] font-medium text-slate-200">
+                  <FileCheck2 className="w-3.5 h-3.5 text-terracotta" />
+                  Deep Audit
+                </div>
+                <h2 className="mt-3 text-2xl sm:text-3xl font-semibold text-white tracking-tight">
+                  A 12-month look-back in one report
+                </h2>
+                <p className="mt-2 text-slate-400 leading-relaxed text-sm">
+                  Upload up to a year of pay stubs at once. The full rule engine runs across every period,
+                  surfaces patterns like a differential paid at the wrong rate for months, and produces a
+                  branded PDF with citations you can hand to payroll or keep for your records.
+                </p>
+                <ul className="mt-4 flex flex-wrap gap-2 text-xs text-slate-300">
+                  {['Cross-period reconciliation', 'Pattern detection', 'Rule citations', 'Branded PDF'].map(x => (
+                    <li key={x} className="inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-950 px-3 py-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-terracotta" />
+                      {x}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 text-[11px] text-slate-500 leading-relaxed">
+                  The average affected worker loses about ${WAGE_THEFT_ROI.avgAnnualLossPerAffectedWorkerUSD.toLocaleString()} a year to pay errors (EPI).
+                  That means one catch covers the audit {AUDIT_ROI_MULTIPLE}x over.
+                </p>
+              </div>
+              <div className="md:col-span-5">
+                <div className="rounded-2xl border border-slate-700/80 bg-slate-950/70 p-5">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-semibold text-white nums tracking-tight">${DEEP_AUDIT_ONE_TIME_USD}</span>
+                    <span className="text-sm text-slate-400">one-time</span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    No subscription. Works for Free or Pro users.
+                  </p>
+                  <span
+                    className="mt-4 block w-full text-center py-3 rounded-xl text-sm font-semibold bg-terracotta/40 text-terracotta cursor-not-allowed"
+                    aria-disabled="true"
+                  >
+                    Coming soon
+                  </span>
+                  <p className="mt-3 text-[11px] text-slate-500 leading-relaxed">
+                    Billing isn&rsquo;t wired in this build. Pay once for a 12-month look-back report.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+        </ScrollReveal>
+
+        {/* Secondary: subscription choice */}
+        <ScrollReveal className="max-w-4xl mx-auto mb-6">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-[0.18em]">Or keep checking every month</p>
+              <h3 className="mt-1 text-lg font-semibold text-white">Free or Pro for ongoing verification</h3>
+            </div>
+            <div className="inline-flex items-center rounded-full border border-slate-800 bg-slate-900 p-1">
+              <CadencePill active={cadence === 'monthly'} onClick={() => setCadence('monthly')} label="Monthly" />
+              <CadencePill
+                active={cadence === 'annual'}
+                onClick={() => setCadence('annual')}
+                label={<>Annual <span className="ml-1 text-[10px] font-bold text-terracotta">save {PRO_ANNUAL_DISCOUNT_PCT}%</span></>}
+              />
+            </div>
           </div>
         </ScrollReveal>
 
-        {/* 2-tier grid */}
         <ScrollReveal stagger className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 max-w-4xl mx-auto sg-stagger items-stretch">
           {TIERS.map(t => (
             <TierCard
@@ -139,76 +184,35 @@ export default function Pricing() {
               tier={t}
               cadence={cadence}
               currentTier={tier}
-              onActivate={activate}
+              onActivate={activatePro}
             />
           ))}
         </ScrollReveal>
 
         {/* Trial band */}
-        <ScrollReveal className="max-w-4xl mx-auto mt-12">
+        <ScrollReveal className="max-w-4xl mx-auto mt-10">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6 flex flex-col md:flex-row md:items-center gap-4">
             <div className="inline-flex items-center gap-2 text-white shrink-0">
-              <Sparkles className="w-5 h-5 text-terracotta" />
-              <p className="text-sm font-semibold">7-day Pro trial, no card required</p>
+              <DollarSign className="w-5 h-5 text-terracotta" />
+              <p className="text-sm font-semibold">The honest math</p>
             </div>
             <p className="text-sm text-slate-300 leading-relaxed flex-1">
-              Log at least one shift to start the trial. Annual signups get a 14-day trial. Cancel any
-              time from Settings; nothing auto-renews during the trial. Deep Audit is a separate
-              one-time purchase available to Free and Pro users alike.
+              Deep Audit pays for itself on a single catch ({AUDIT_ROI_MULTIPLE}x ROI at the EPI average).
+              Pro makes sense once you&rsquo;ve had a first catch and want every future paycheck checked.
+              Free keeps working if you&rsquo;re not ready.
             </p>
+            <Link
+              to="/tools"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-terracotta hover:text-terracotta-light shrink-0"
+            >
+              Open toolkit
+              <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
         </ScrollReveal>
 
-        {/* Deep Audit row */}
-        <ScrollReveal className="max-w-4xl mx-auto mt-8">
-          <article className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 sm:p-8 grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-10 items-center">
-            <div className="md:col-span-7">
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-slate-200">
-                <FileCheck2 className="w-3.5 h-3.5 text-terracotta" />
-                Deep Audit
-              </div>
-              <h3 className="mt-3 text-2xl font-semibold text-white tracking-tight">
-                A 12-month look-back in one report
-              </h3>
-              <p className="mt-2 text-slate-400 leading-relaxed text-sm">
-                Upload up to a year of pay stubs at once. The full rule engine runs across every period, we
-                surface patterns like a differential paid at the wrong rate for months, and you get a
-                branded PDF with citations you can hand to payroll or keep for your records.
-              </p>
-              <ul className="mt-4 flex flex-wrap gap-2 text-xs text-slate-300">
-                {['Cross-period reconciliation', 'Pattern detection', 'Rule citations', 'Branded PDF'].map(x => (
-                  <li key={x} className="inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-950 px-3 py-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-terracotta" />
-                    {x}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="md:col-span-5">
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-semibold text-white nums">${DEEP_AUDIT_ONE_TIME_USD}</span>
-                  <span className="text-xs text-slate-500">one-time purchase</span>
-                </div>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  Available to Free and Pro users. Not bundled with any subscription.
-                </p>
-                <span
-                  className="mt-4 block w-full text-center py-3 rounded-xl text-sm font-semibold bg-slate-800 text-slate-400 cursor-not-allowed"
-                  aria-disabled="true"
-                >
-                  Coming soon
-                </span>
-                <p className="mt-3 text-[11px] text-slate-500 leading-relaxed">
-                  Billing isn&rsquo;t wired in this build. Pay once for a 12-month look-back report.
-                </p>
-              </div>
-            </div>
-          </article>
-        </ScrollReveal>
-
         <p className="text-xs text-slate-600 text-center mt-10 max-w-xl mx-auto leading-relaxed">
-          Pricing is not wired to a billing provider here. Activating Pro sets a local flag so you can
+          Pricing is not wired to a billing provider in this build. Activating Pro sets a local flag so you can
           test the gated tools and comparison flows. Deep Audit remains marked coming soon.
         </p>
 
@@ -231,20 +235,7 @@ function TierCard({ tier, cadence, currentTier, onActivate }) {
   const isCurrent = currentTier === tier.id
 
   return (
-    <article
-      className={`relative rounded-3xl border p-6 sm:p-7 flex flex-col transition-colors ${
-        tier.featured
-          ? 'border-terracotta/40 bg-terracotta/5 shadow-warm md:-translate-y-2 glass-edge'
-          : 'border-slate-800 bg-slate-900/50 hover:border-slate-700'
-      }`}
-    >
-      {tier.featured && (
-        <div className="absolute -top-3 left-6 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-terracotta text-white text-[11px] font-semibold tracking-wide shadow-warm">
-          <Sparkles className="w-3 h-3" />
-          Most popular
-        </div>
-      )}
-
+    <article className="relative rounded-3xl border border-slate-800 bg-slate-900/50 hover:border-slate-700 p-6 sm:p-7 flex flex-col transition-colors">
       <div className="flex items-center gap-2">
         {isPro ? <Sparkles className="w-4 h-4 text-terracotta" /> : <Shield className="w-4 h-4 text-slate-300" />}
         <h2 className="text-base font-semibold text-white">{tier.name}</h2>
@@ -278,7 +269,7 @@ function TierCard({ tier, cadence, currentTier, onActivate }) {
         ) : (
           <MagneticButton
             type="button"
-            onClick={() => onActivate(tier.id)}
+            onClick={onActivate}
             strength={10}
             className="sg-shine-host block w-full text-center py-3 rounded-xl text-sm font-semibold transition-colors cursor-pointer bg-terracotta hover:bg-terracotta-dark text-white"
           >

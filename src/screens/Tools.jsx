@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   Wrench, TrendingUp, Gauge, Plane, Coins, Mail, Scale, ArrowRight,
   Lock, DollarSign, Sparkles, ShieldCheck, Calculator, CalendarClock,
+  FileText, LineChart,
 } from 'lucide-react'
 import Header from '../components/Header'
 import Disclaimer from '../components/Disclaimer'
@@ -20,6 +21,8 @@ import RetroPayTool from '../components/tools/RetroPayTool'
 import HrEmailTool from '../components/tools/HrEmailTool'
 import TaxEstimatorTool from '../components/tools/TaxEstimatorTool'
 import NextPaycheckTool from '../components/tools/NextPaycheckTool'
+import PaystubExplainerTool from '../components/tools/PaystubExplainerTool'
+import PaycheckPredictorTool from '../components/tools/PaycheckPredictorTool'
 
 /**
  * Tools hub. Paneled layout: left gives a grid of tiles, right renders the selected tool.
@@ -53,6 +56,22 @@ const TOOLS = [
     icon: CalendarClock,
     blurb: 'When your next paycheck lands and how big it looks.',
     component: NextPaycheckTool,
+  },
+  {
+    id: 'explainer',
+    name: 'Paystub explainer',
+    tier: 'pro',
+    icon: FileText,
+    blurb: 'Every line of your last paystub in plain language.',
+    component: PaystubExplainerTool,
+  },
+  {
+    id: 'predictor',
+    name: 'Paycheck predictor',
+    tier: 'pro',
+    icon: LineChart,
+    blurb: 'Project the next 1-4 paychecks from logged shifts + your pay cycle.',
+    component: PaycheckPredictorTool,
   },
   {
     id: 'pto',

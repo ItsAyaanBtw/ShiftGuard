@@ -14,6 +14,7 @@
  */
 
 import * as googleCalendar from './googleCalendar'
+import * as googleTimeline from './googleTimeline'
 import * as calendly from './calendly'
 import * as toggl from './toggl'
 import * as clockify from './clockify'
@@ -28,6 +29,11 @@ export const REGISTRY = {
     verify: googleCalendar.fetchEvents,
     importShifts: googleCalendar.importShifts,
     blurb: 'Pull your shift calendar by pasting a "Secret iCal address" URL.',
+  },
+  [googleTimeline.ADAPTER.id]: {
+    ...googleTimeline.ADAPTER,
+    importShifts: googleTimeline.importShifts,
+    blurb: 'Takeout your Location History JSON and reconstruct workplace arrival / departure times without manual logging.',
   },
   [calendly.ADAPTER.id]: {
     ...calendly.ADAPTER,

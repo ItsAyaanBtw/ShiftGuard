@@ -13,8 +13,7 @@ import ScrollProgress from '../components/motion/ScrollProgress'
 import MagneticButton from '../components/motion/MagneticButton'
 import { DEMO_SCENARIOS, loadScenario } from '../lib/demoData'
 import {
-  WAGE_THEFT_ROI, proMonthlyRoiMultiple, proAnnualRoiMultiple,
-  PRO_MONTHLY_USD, PRO_ANNUAL_USD,
+  WAGE_THEFT_ROI, PRO_MONTHLY_USD,
 } from '../lib/roiConstants'
 
 /**
@@ -165,10 +164,9 @@ export default function Landing() {
           </h2>
           <p className="mt-3 text-slate-400 leading-relaxed max-w-2xl">
             That figure comes from the Economic Policy Institute&rsquo;s analysis of minimum-wage violations
-            alone. Pro at ${PRO_MONTHLY_USD}/month pays for itself{' '}
-            <span className="text-white font-semibold">{proMonthlyRoiMultiple()}x over</span> on one catch.
-            Annual Pro at ${PRO_ANNUAL_USD}/year pays for itself{' '}
-            <span className="text-white font-semibold">{proAnnualRoiMultiple()}x over</span>.
+            alone. The Deep Audit at <span className="text-white font-semibold">$14.99</span> pays for itself{' '}
+            <span className="text-white font-semibold">220x over</span> on a single catch. If you want
+            ongoing verification after that, Pro is ${PRO_MONTHLY_USD}/month.
           </p>
           <p className="mt-4 text-slate-300 leading-relaxed max-w-2xl">
             And you&rsquo;re not alone:{' '}
